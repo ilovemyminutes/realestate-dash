@@ -116,14 +116,8 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
     """동별 전세가율 바 차트 (Altair)"""
 
     # 데이터 정렬 (전세가율 오름차순)
-    sorted_df = df.sort_values("jeonse_rate", ascending=True).copy()
-
-    # 위험 등급 추가
-    sorted_df["risk_level"] = pd.cut(
-        sorted_df["jeonse_rate"],
-        bins=[0, 50, 60, 70, 80, 100],
-        labels=["매우 안전", "안전", "보통", "주의", "위험"],
-    )
+    sorted_df = df.sort_values("jeonse_rate", ascending=False).copy()
+    region_order = sorted_df["region"].tolist()
 
     # 기본 바 차트
     bars = (
@@ -134,9 +128,8 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
                 "jeonse_rate:Q",
                 title="전세가율 (%)",
                 scale=alt.Scale(domain=[0, 100]),
-                axis=alt.Axis(grid=True, gridOpacity=0.3),
             ),
-            y=alt.Y("region:N", title="지역(동)", sort="-x"),
+            y=alt.Y("region:N", title="지역(동)", sort=region_order),
             color=alt.Color(
                 "jeonse_rate:Q",
                 scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[20, 90]),
@@ -158,11 +151,6 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
         .mark_rule(strokeDash=[5, 5], color="#FF6B6B", strokeWidth=2)
         .encode(x="x:Q")
     )
-    text_70 = (
-        alt.Chart(pd.DataFrame({"x": [70], "y": [sorted_df["region"].iloc[-1]]}))
-        .mark_text(align="left", dx=5, dy=-10, color="#FF6B6B", fontSize=11, fontWeight="bold")
-        .encode(x="x:Q", y="y:N", text=alt.value("⚠️ 주의 70%"))
-    )
 
     # 위험선 80%
     rule_80 = (
@@ -170,25 +158,19 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
         .mark_rule(strokeDash=[5, 5], color="#DC143C", strokeWidth=2)
         .encode(x="x:Q")
     )
-    text_80 = (
-        alt.Chart(pd.DataFrame({"x": [80], "y": [sorted_df["region"].iloc[-1]]}))
-        .mark_text(align="left", dx=5, dy=-10, color="#DC143C", fontSize=11, fontWeight="bold")
-        .encode(x="x:Q", y="y:N", text=alt.value("🚨 위험 80%"))
-    )
 
     # 레이어 결합
     chart = (
-        (bars + rule_70 + text_70 + rule_80 + text_80)
+        alt.layer(bars, rule_70, rule_80)
         .properties(
             title=alt.TitleParams(
                 text="동별 전세가율 현황 (6개월 평균)",
-                subtitle="낮을수록 안전 | 70% 이상 주의 | 80% 이상 위험",
+                subtitle="낮을수록 안전 | 🔴 70% 주의 | 🔴🔴 80% 위험",
                 fontSize=18,
                 anchor="start",
             ),
-            height=max(400, len(sorted_df) * 25),
+            height=max(400, len(sorted_df) * 28),
         )
-        .configure_axis(labelFontSize=11, titleFontSize=12)
         .interactive()
     )
 
