@@ -5,7 +5,8 @@
 - 깡통전세 위험 경고
 """
 
-import plotly.express as px
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from utils.bq_client import (
@@ -110,6 +111,136 @@ def load_jeonse_rate_summary_by_region():
     return client.query(query).to_dataframe()
 
 
+# --- 차트 함수 ---
+def create_jeonse_rate_bar_chart(df: pd.DataFrame):
+    """동별 전세가율 바 차트 (Altair)"""
+
+    # 데이터 정렬 (전세가율 오름차순)
+    sorted_df = df.sort_values("jeonse_rate", ascending=True).copy()
+
+    # 위험 등급 추가
+    sorted_df["risk_level"] = pd.cut(
+        sorted_df["jeonse_rate"],
+        bins=[0, 50, 60, 70, 80, 100],
+        labels=["매우 안전", "안전", "보통", "주의", "위험"],
+    )
+
+    # 기본 바 차트
+    bars = (
+        alt.Chart(sorted_df)
+        .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+        .encode(
+            x=alt.X(
+                "jeonse_rate:Q",
+                title="전세가율 (%)",
+                scale=alt.Scale(domain=[0, 100]),
+                axis=alt.Axis(grid=True, gridOpacity=0.3),
+            ),
+            y=alt.Y("region:N", title="지역(동)", sort="-x"),
+            color=alt.Color(
+                "jeonse_rate:Q",
+                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[20, 90]),
+                legend=alt.Legend(title="전세가율(%)", orient="right"),
+            ),
+            tooltip=[
+                alt.Tooltip("region:N", title="지역"),
+                alt.Tooltip("jeonse_rate:Q", title="전세가율(%)", format=".1f"),
+                alt.Tooltip("avg_maemae:Q", title="평균매매가(만원)", format=",.0f"),
+                alt.Tooltip("avg_jeonsae:Q", title="평균전세가(만원)", format=",.0f"),
+                alt.Tooltip("gap:Q", title="갭(만원)", format=",.0f"),
+            ],
+        )
+    )
+
+    # 위험선 70%
+    rule_70 = (
+        alt.Chart(pd.DataFrame({"x": [70]}))
+        .mark_rule(strokeDash=[5, 5], color="#FF6B6B", strokeWidth=2)
+        .encode(x="x:Q")
+    )
+    text_70 = (
+        alt.Chart(pd.DataFrame({"x": [70], "y": [sorted_df["region"].iloc[-1]]}))
+        .mark_text(align="left", dx=5, dy=-10, color="#FF6B6B", fontSize=11, fontWeight="bold")
+        .encode(x="x:Q", y="y:N", text=alt.value("⚠️ 주의 70%"))
+    )
+
+    # 위험선 80%
+    rule_80 = (
+        alt.Chart(pd.DataFrame({"x": [80]}))
+        .mark_rule(strokeDash=[5, 5], color="#DC143C", strokeWidth=2)
+        .encode(x="x:Q")
+    )
+    text_80 = (
+        alt.Chart(pd.DataFrame({"x": [80], "y": [sorted_df["region"].iloc[-1]]}))
+        .mark_text(align="left", dx=5, dy=-10, color="#DC143C", fontSize=11, fontWeight="bold")
+        .encode(x="x:Q", y="y:N", text=alt.value("🚨 위험 80%"))
+    )
+
+    # 레이어 결합
+    chart = (
+        (bars + rule_70 + text_70 + rule_80 + text_80)
+        .properties(
+            title=alt.TitleParams(
+                text="동별 전세가율 현황 (6개월 평균)",
+                subtitle="낮을수록 안전 | 70% 이상 주의 | 80% 이상 위험",
+                fontSize=18,
+                anchor="start",
+            ),
+            height=max(400, len(sorted_df) * 25),
+        )
+        .configure_axis(labelFontSize=11, titleFontSize=12)
+        .interactive()
+    )
+
+    return chart
+
+
+def create_apartment_scatter_chart(df: pd.DataFrame):
+    """아파트별 전세가율 산점도 차트"""
+
+    df_copy = df.copy()
+    df_copy["gap_억"] = df_copy["gap"] / 10000
+    df_copy["avg_maemae_억"] = df_copy["avg_maemae"] / 10000
+
+    chart = (
+        alt.Chart(df_copy)
+        .mark_circle(opacity=0.7)
+        .encode(
+            x=alt.X("avg_maemae_억:Q", title="평균 매매가 (억원)", scale=alt.Scale(zero=False)),
+            y=alt.Y("jeonse_rate:Q", title="전세가율 (%)", scale=alt.Scale(domain=[30, 100])),
+            size=alt.Size("gap_억:Q", title="갭(억)", scale=alt.Scale(range=[50, 500])),
+            color=alt.Color(
+                "jeonse_rate:Q",
+                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[40, 90]),
+                legend=None,
+            ),
+            tooltip=[
+                alt.Tooltip("apartment_name:N", title="아파트"),
+                alt.Tooltip("region:N", title="지역"),
+                alt.Tooltip("area_type:N", title="평형"),
+                alt.Tooltip("jeonse_rate:Q", title="전세가율(%)", format=".1f"),
+                alt.Tooltip("avg_maemae_억:Q", title="매매가(억)", format=".2f"),
+                alt.Tooltip("gap_억:Q", title="갭(억)", format=".2f"),
+            ],
+        )
+        .properties(
+            title=alt.TitleParams(
+                text="아파트별 전세가율 분포",
+                subtitle="원 크기: 갭(억) | 색상: 전세가율",
+                fontSize=16,
+            ),
+            height=400,
+        )
+        .interactive()
+    )
+
+    # 위험선 추가
+    rule_70 = alt.Chart(pd.DataFrame({"y": [70]})).mark_rule(strokeDash=[5, 5], color="#FF6B6B").encode(y="y:Q")
+    rule_80 = alt.Chart(pd.DataFrame({"y": [80]})).mark_rule(strokeDash=[5, 5], color="#DC143C").encode(y="y:Q")
+
+    return chart + rule_70 + rule_80
+
+
 # --- UI ---
 tab1, tab2 = st.tabs(["🏘️ 동(지역)별 분석", "🏢 아파트별 분석"])
 
@@ -121,41 +252,23 @@ with tab1:
 
         if not region_df.empty:
             # KPI Cards
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
 
             highest = region_df.iloc[0]
             lowest = region_df.iloc[-1]
             avg_rate = region_df["jeonse_rate"].mean()
+            danger_count = len(region_df[region_df["jeonse_rate"] >= 70])
 
             col1.metric("🔴 전세가율 최고", f"{highest['region']}", f"{highest['jeonse_rate']}%")
-            col2.metric("🔵 전세가율 최저", f"{lowest['region']}", f"{lowest['jeonse_rate']}%")
-            col3.metric(
-                "📊 전체 평균",
-                f"{avg_rate:.1f}%",
-                "깡통전세 주의" if avg_rate > 70 else "안정적",
-            )
+            col2.metric("🟢 전세가율 최저", f"{lowest['region']}", f"{lowest['jeonse_rate']}%")
+            col3.metric("📊 전체 평균", f"{avg_rate:.1f}%")
+            col4.metric("⚠️ 주의 지역", f"{danger_count}개", "70% 이상")
 
             st.markdown("---")
 
-            # 차트
-            fig = px.bar(
-                region_df.sort_values("jeonse_rate", ascending=True),
-                x="jeonse_rate",
-                y="region",
-                orientation="h",
-                color="jeonse_rate",
-                color_continuous_scale="RdYlGn_r",
-                title="동별 전세가율 현황 (6개월 평균)",
-                labels={"jeonse_rate": "전세가율(%)", "region": "지역(동)"},
-            )
-            fig.add_vline(x=70, line_dash="dash", line_color="red", annotation_text="위험선 70%")
-            fig.add_vline(
-                x=80,
-                line_dash="dash",
-                line_color="darkred",
-                annotation_text="깡통전세 80%",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            # Altair 차트
+            chart = create_jeonse_rate_bar_chart(region_df)
+            st.altair_chart(chart, use_container_width=True)
 
             # 상세 테이블
             with st.expander("📋 상세 데이터 보기"):
@@ -189,10 +302,10 @@ with tab2:
 
             with col1:
                 regions = ["전체"] + sorted(apt_df["region"].unique().tolist())
-                selected_region = st.selectbox("지역(동) 선택", regions)
+                selected_region = st.selectbox("🏘️ 지역(동) 선택", regions)
 
             with col2:
-                rate_filter = st.slider("전세가율 범위 (%)", min_value=0, max_value=100, value=(50, 90))
+                rate_filter = st.slider("📊 전세가율 범위 (%)", min_value=0, max_value=100, value=(40, 90))
 
             # 필터 적용
             filtered_df = apt_df.copy()
@@ -203,6 +316,11 @@ with tab2:
             ]
 
             st.markdown("---")
+
+            # 산점도 차트
+            if not filtered_df.empty:
+                scatter_chart = create_apartment_scatter_chart(filtered_df)
+                st.altair_chart(scatter_chart, use_container_width=True)
 
             # 위험군 분류
             col1, col2 = st.columns(2)
@@ -216,13 +334,10 @@ with tab2:
                 if not gap_invest.empty:
                     for _, row in gap_invest.iterrows():
                         gap_억 = row["gap"] / 10000
-                        st.markdown(
-                            f"""
-                        **{row['apartment_name']}** ({row['area_type']})
-                        📍 {row['region']} | 전세가율: **{row['jeonse_rate']}%** | 갭: **{gap_억:.1f}억**
-                        """
+                        st.success(
+                            f"**{row['apartment_name']}** ({row['area_type']})  \n"
+                            f"📍 {row['region']} | 전세가율: **{row['jeonse_rate']}%** | 갭: **{gap_억:.1f}억**"
                         )
-                        st.divider()
                 else:
                     st.info("해당 조건의 단지가 없습니다.")
 
@@ -234,10 +349,8 @@ with tab2:
                     for _, row in danger.iterrows():
                         gap_억 = row["gap"] / 10000
                         st.error(
-                            f"""
-                        **{row['apartment_name']}** ({row['area_type']})
-                        📍 {row['region']} | 전세가율: **{row['jeonse_rate']}%** | 갭: **{gap_억:.1f}억**
-                        """
+                            f"**{row['apartment_name']}** ({row['area_type']})  \n"
+                            f"📍 {row['region']} | 전세가율: **{row['jeonse_rate']}%** | 갭: **{gap_억:.1f}억**"
                         )
                 else:
                     st.success("깡통전세 위험 단지가 없습니다! 👍")
