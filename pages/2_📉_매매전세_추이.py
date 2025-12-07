@@ -17,11 +17,12 @@ st.set_page_config(page_title="매매/전세 추이", page_icon="📉", layout="
 st.title("📉 매매/전세 추이")
 st.markdown("동별, 아파트별 **매매가**와 **전세가**의 시계열 변화를 분석합니다.")
 
-# --- 사이드바: 기간 선택 ---
+# --- 사이드바: 필터 설정 ---
 with st.sidebar:
-    st.header("📅 데이터 기간 설정")
+    st.header("🔧 필터 설정")
 
-    # 기본값: 2025-01-01 ~ 오늘
+    # 기간 설정
+    st.subheader("📅 데이터 기간")
     default_start = date(2025, 1, 1)
     default_end = date.today()
 
@@ -33,13 +34,27 @@ with st.sidebar:
         key="date_range",
     )
 
-    # 날짜 범위 파싱
     if len(date_range) == 2:
         start_date, end_date = date_range
     else:
         start_date, end_date = default_start, default_end
 
     st.caption(f"📊 {start_date.strftime('%Y.%m')} ~ {end_date.strftime('%Y.%m')}")
+
+    st.divider()
+
+    # 평형 범위 설정
+    st.subheader("📐 평형 범위")
+    area_range = st.slider(
+        "전용면적 (㎡)",
+        min_value=10,
+        max_value=200,
+        value=(59, 135),  # 기본값: 국민평형 ~ 대형
+        step=1,
+        key="area_range",
+    )
+    min_area, max_area = area_range
+    st.caption(f"📐 {min_area}㎡ ~ {max_area}㎡ (약 {min_area/3.3:.0f}평 ~ {max_area/3.3:.0f}평)")
 
 st.markdown("---")
 
@@ -71,8 +86,8 @@ def load_available_apartments():
 
 
 @st.cache_data(ttl=3600)
-def load_apartments_price_history(apartment_names: tuple):
-    """여러 아파트의 매매/전세 월간 평균 이력"""
+def load_apartments_price_history(apartment_names: tuple, min_area: int = 10, max_area: int = 200):
+    """여러 아파트의 매매/전세 월간 평균 이력 (평형 필터링 포함)"""
     client = get_bq_client()
 
     # apartment_names를 SQL IN 절에 사용할 수 있도록 변환
@@ -89,6 +104,7 @@ def load_apartments_price_history(apartment_names: tuple):
         FROM `{TABLE_MAEMAE}`
         WHERE apartment_name IN ({apt_list_str})
           AND price IS NOT NULL
+          AND SAFE_CAST(REGEXP_REPLACE(area_type, r'[^0-9.]', '') AS FLOAT64) BETWEEN {min_area} AND {max_area}
         GROUP BY apartment_name, month
     ),
     jeonsae AS (
@@ -101,6 +117,7 @@ def load_apartments_price_history(apartment_names: tuple):
         FROM `{TABLE_JEONSAE}`
         WHERE apartment_name IN ({apt_list_str})
           AND price IS NOT NULL
+          AND SAFE_CAST(REGEXP_REPLACE(area_type, r'[^0-9.]', '') AS FLOAT64) BETWEEN {min_area} AND {max_area}
         GROUP BY apartment_name, month
     )
     SELECT * FROM maemae
@@ -115,8 +132,8 @@ def load_apartments_price_history(apartment_names: tuple):
 
 
 @st.cache_data(ttl=3600)
-def load_region_price_trend():
-    """동별 월간 평균가 추이 (주상복합 제외)"""
+def load_region_price_trend(min_area: int = 10, max_area: int = 200):
+    """동별 월간 평균가 추이 (주상복합 제외, 평형 필터링 포함)"""
     client = get_bq_client()
     query = f"""
     WITH maemae_monthly AS (
@@ -130,6 +147,7 @@ def load_region_price_trend():
         WHERE price IS NOT NULL
           AND date >= '2023-01-01'
           AND {FILTER_EXCLUDE_JUSANGBOKHAP}
+          AND SAFE_CAST(REGEXP_REPLACE(area_type, r'[^0-9.]', '') AS FLOAT64) BETWEEN {min_area} AND {max_area}
         GROUP BY region, month
     ),
     jeonsae_monthly AS (
@@ -143,6 +161,7 @@ def load_region_price_trend():
         WHERE price IS NOT NULL
           AND date >= '2023-01-01'
           AND {FILTER_EXCLUDE_JUSANGBOKHAP}
+          AND SAFE_CAST(REGEXP_REPLACE(area_type, r'[^0-9.]', '') AS FLOAT64) BETWEEN {min_area} AND {max_area}
         GROUP BY region, month
     )
     SELECT * FROM maemae_monthly
@@ -298,7 +317,7 @@ with tab1:
     st.subheader("🏘️ 동별 월간 평균가 추이")
 
     try:
-        region_df = load_region_price_trend()
+        region_df = load_region_price_trend(min_area, max_area)
 
         if not region_df.empty:
             # 지역 선택 (복수)
@@ -411,8 +430,8 @@ with tab2:
                 st.markdown("---")
 
                 with st.spinner("데이터 로딩 중..."):
-                    # 여러 아파트 데이터 한 번에 로딩
-                    price_df = load_apartments_price_history(tuple(selected_apts))
+                    # 여러 아파트 데이터 한 번에 로딩 (평형 필터링 포함)
+                    price_df = load_apartments_price_history(tuple(selected_apts), min_area, max_area)
 
                     # 기간 필터링
                     price_df = price_df[
