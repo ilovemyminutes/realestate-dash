@@ -5,12 +5,8 @@
 - 깡통전세 위험 경고
 """
 
-import sys
-
 import plotly.express as px
 import streamlit as st
-
-sys.path.append(".")
 
 from utils.bq_client import (
     FILTER_EXCLUDE_JUSANGBOKHAP,
@@ -22,9 +18,7 @@ from utils.bq_client import (
 st.set_page_config(page_title="전세가율 분석", page_icon="📈", layout="wide")
 
 st.title("📈 전세가율 분석")
-st.markdown(
-    "아파트별/동별 전세가율을 분석하여 **갭투자 유망 단지**와 **깡통전세 위험군**을 파악합니다."
-)
+st.markdown("아파트별/동별 전세가율을 분석하여 **갭투자 유망 단지**와 **깡통전세 위험군**을 파악합니다.")
 st.markdown("---")
 
 
@@ -133,12 +127,8 @@ with tab1:
             lowest = region_df.iloc[-1]
             avg_rate = region_df["jeonse_rate"].mean()
 
-            col1.metric(
-                "🔴 전세가율 최고", f"{highest['region']}", f"{highest['jeonse_rate']}%"
-            )
-            col2.metric(
-                "🔵 전세가율 최저", f"{lowest['region']}", f"{lowest['jeonse_rate']}%"
-            )
+            col1.metric("🔴 전세가율 최고", f"{highest['region']}", f"{highest['jeonse_rate']}%")
+            col2.metric("🔵 전세가율 최저", f"{lowest['region']}", f"{lowest['jeonse_rate']}%")
             col3.metric(
                 "📊 전체 평균",
                 f"{avg_rate:.1f}%",
@@ -158,9 +148,7 @@ with tab1:
                 title="동별 전세가율 현황 (6개월 평균)",
                 labels={"jeonse_rate": "전세가율(%)", "region": "지역(동)"},
             )
-            fig.add_vline(
-                x=70, line_dash="dash", line_color="red", annotation_text="위험선 70%"
-            )
+            fig.add_vline(x=70, line_dash="dash", line_color="red", annotation_text="위험선 70%")
             fig.add_vline(
                 x=80,
                 line_dash="dash",
@@ -172,15 +160,9 @@ with tab1:
             # 상세 테이블
             with st.expander("📋 상세 데이터 보기"):
                 display_df = region_df.copy()
-                display_df["avg_maemae"] = display_df["avg_maemae"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
-                display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
-                display_df["gap"] = display_df["gap"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
+                display_df["avg_maemae"] = display_df["avg_maemae"].apply(lambda x: f"{x/10000:.1f}억")
+                display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(lambda x: f"{x/10000:.1f}억")
+                display_df["gap"] = display_df["gap"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df.columns = [
                     "지역",
                     "평균매매가",
@@ -210,17 +192,14 @@ with tab2:
                 selected_region = st.selectbox("지역(동) 선택", regions)
 
             with col2:
-                rate_filter = st.slider(
-                    "전세가율 범위 (%)", min_value=0, max_value=100, value=(50, 90)
-                )
+                rate_filter = st.slider("전세가율 범위 (%)", min_value=0, max_value=100, value=(50, 90))
 
             # 필터 적용
             filtered_df = apt_df.copy()
             if selected_region != "전체":
                 filtered_df = filtered_df[filtered_df["region"] == selected_region]
             filtered_df = filtered_df[
-                (filtered_df["jeonse_rate"] >= rate_filter[0])
-                & (filtered_df["jeonse_rate"] <= rate_filter[1])
+                (filtered_df["jeonse_rate"] >= rate_filter[0]) & (filtered_df["jeonse_rate"] <= rate_filter[1])
             ]
 
             st.markdown("---")
@@ -230,10 +209,9 @@ with tab2:
 
             with col1:
                 st.markdown("#### 🔥 갭투자 유망 (전세가율 60~70%)")
-                gap_invest = filtered_df[
-                    (filtered_df["jeonse_rate"] >= 60)
-                    & (filtered_df["jeonse_rate"] < 70)
-                ].head(10)
+                gap_invest = filtered_df[(filtered_df["jeonse_rate"] >= 60) & (filtered_df["jeonse_rate"] < 70)].head(
+                    10
+                )
 
                 if not gap_invest.empty:
                     for _, row in gap_invest.iterrows():
@@ -267,15 +245,9 @@ with tab2:
             # 전체 리스트
             with st.expander(f"📋 전체 목록 ({len(filtered_df)}건)"):
                 display_df = filtered_df.copy()
-                display_df["avg_maemae"] = display_df["avg_maemae"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
-                display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
-                display_df["gap"] = display_df["gap"].apply(
-                    lambda x: f"{x/10000:.1f}억"
-                )
+                display_df["avg_maemae"] = display_df["avg_maemae"].apply(lambda x: f"{x/10000:.1f}억")
+                display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(lambda x: f"{x/10000:.1f}억")
+                display_df["gap"] = display_df["gap"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df.columns = [
                     "지역",
                     "아파트",

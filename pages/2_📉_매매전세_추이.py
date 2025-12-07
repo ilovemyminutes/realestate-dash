@@ -13,14 +13,20 @@ from utils.bq_client import (
 st.set_page_config(page_title="매매/전세 추이", page_icon="📉", layout="wide")
 
 st.title("📉 매매/전세 추이")
-st.markdown("아파트별, 동별 **매매가**와 **전세가**의 시계열 변화를 분석합니다.")
+st.markdown("동별, 아파트별 **매매가**와 **전세가**의 시계열 변화를 분석합니다.")
 st.markdown("---")
 
-# 색상 팔레트
-COLORS = {
-    "매매": "#FF6B6B",  # 따뜻한 코랄
-    "전세": "#4ECDC4",  # 청록색
-}
+# 색상 팔레트 (아파트 비교용)
+APARTMENT_COLORS = [
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
+    "#FFEAA7",
+    "#DDA0DD",
+    "#98D8C8",
+    "#F7DC6F",
+]
 
 
 # --- 데이터 로딩 ---
@@ -38,39 +44,45 @@ def load_available_apartments():
 
 
 @st.cache_data(ttl=3600)
-def load_apartment_price_history(apartment_name: str):
-    """특정 아파트의 매매/전세 이력"""
+def load_apartments_price_history(apartment_names: tuple):
+    """여러 아파트의 매매/전세 월간 평균 이력"""
     client = get_bq_client()
+
+    # apartment_names를 SQL IN 절에 사용할 수 있도록 변환
+    apt_list_str = ", ".join([f"'{apt}'" for apt in apartment_names])
+
     query = f"""
     WITH maemae AS (
         SELECT
-            date,
-            area_type,
+            apartment_name,
+            SUBSTR(date, 1, 7) as month,
             AVG(price) as price,
+            COUNT(*) as trade_count,
             '매매' as type
         FROM `{TABLE_MAEMAE}`
-        WHERE apartment_name = '{apartment_name}'
+        WHERE apartment_name IN ({apt_list_str})
           AND price IS NOT NULL
-        GROUP BY date, area_type
+        GROUP BY apartment_name, month
     ),
     jeonsae AS (
         SELECT
-            date,
-            area_type,
+            apartment_name,
+            SUBSTR(date, 1, 7) as month,
             AVG(price) as price,
+            COUNT(*) as trade_count,
             '전세' as type
         FROM `{TABLE_JEONSAE}`
-        WHERE apartment_name = '{apartment_name}'
+        WHERE apartment_name IN ({apt_list_str})
           AND price IS NOT NULL
-        GROUP BY date, area_type
+        GROUP BY apartment_name, month
     )
     SELECT * FROM maemae
     UNION ALL
     SELECT * FROM jeonsae
-    ORDER BY date
+    ORDER BY month
     """
     df = client.query(query).to_dataframe()
-    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = pd.to_datetime(df["month"] + "-01")
     df["price_억"] = df["price"] / 10000
     return df
 
@@ -118,93 +130,8 @@ def load_region_price_trend():
 
 
 # --- 차트 함수 ---
-def create_price_chart(df: pd.DataFrame, title: str, area_type: str = None):
-    """매매/전세 추이 Altair 차트 생성"""
-
-    chart_df = df.copy()
-
-    # 기본 선 차트
-    base = alt.Chart(chart_df).encode(
-        x=alt.X("date:T", title="날짜", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
-        y=alt.Y("price_억:Q", title="가격 (억원)", scale=alt.Scale(zero=False)),
-        color=alt.Color(
-            "type:N",
-            scale=alt.Scale(domain=["매매", "전세"], range=[COLORS["매매"], COLORS["전세"]]),
-            legend=alt.Legend(title="거래유형", orient="top"),
-        ),
-        tooltip=[
-            alt.Tooltip("date:T", title="날짜", format="%Y-%m-%d"),
-            alt.Tooltip("type:N", title="유형"),
-            alt.Tooltip("price_억:Q", title="가격(억)", format=".2f"),
-            alt.Tooltip("area_type:N", title="평형"),
-        ],
-    )
-
-    # 선 + 점 레이어
-    line = base.mark_line(strokeWidth=2.5, opacity=0.8)
-    points = base.mark_circle(size=60, opacity=0.9)
-
-    # 결합
-    chart = (
-        (line + points)
-        .properties(title=alt.TitleParams(text=title, fontSize=16, anchor="start"), height=350)
-        .configure_axis(labelFontSize=11, titleFontSize=12, gridOpacity=0.3)
-        .configure_legend(labelFontSize=12, titleFontSize=12)
-        .interactive()
-    )
-
-    return chart
-
-
-def create_area_chart(df: pd.DataFrame, title: str):
-    """매매/전세 영역 차트 (갭 시각화)"""
-
-    # 피벗으로 매매/전세 분리
-    pivot_df = df.pivot_table(index="date", columns="type", values="price_억", aggfunc="mean").reset_index()
-
-    if "매매" not in pivot_df.columns or "전세" not in pivot_df.columns:
-        return None
-
-    pivot_df["gap"] = pivot_df["매매"] - pivot_df["전세"]
-
-    # 기본 차트
-    base = alt.Chart(pivot_df).encode(x=alt.X("date:T", title="날짜", axis=alt.Axis(format="%Y-%m")))
-
-    # 매매가 라인
-    maemae_line = base.mark_line(color=COLORS["매매"], strokeWidth=3).encode(
-        y=alt.Y("매매:Q", title="가격 (억원)", scale=alt.Scale(zero=False)),
-        tooltip=[
-            alt.Tooltip("date:T", format="%Y-%m-%d"),
-            alt.Tooltip("매매:Q", format=".2f", title="매매가"),
-        ],
-    )
-
-    # 전세가 라인
-    jeonsae_line = base.mark_line(color=COLORS["전세"], strokeWidth=3).encode(
-        y="전세:Q",
-        tooltip=[
-            alt.Tooltip("date:T", format="%Y-%m-%d"),
-            alt.Tooltip("전세:Q", format=".2f", title="전세가"),
-        ],
-    )
-
-    # 갭 영역 (매매-전세 사이)
-    area = base.mark_area(opacity=0.15, color="#FFD93D").encode(y="전세:Q", y2="매매:Q")
-
-    chart = (
-        (area + jeonsae_line + maemae_line)
-        .properties(
-            title=alt.TitleParams(text=title, subtitle="음영: 매매-전세 갭", fontSize=16),
-            height=400,
-        )
-        .interactive()
-    )
-
-    return chart
-
-
-def create_region_comparison_chart(df: pd.DataFrame, trade_type: str):
-    """지역별 비교 차트"""
+def create_comparison_chart(df: pd.DataFrame, trade_type: str, group_col: str, title: str):
+    """비교 차트 생성 (지역별 또는 아파트별)"""
 
     filtered = df[df["type"] == trade_type]
 
@@ -214,18 +141,18 @@ def create_region_comparison_chart(df: pd.DataFrame, trade_type: str):
         .encode(
             x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
             y=alt.Y("price_억:Q", title="평균가격 (억원)", scale=alt.Scale(zero=False)),
-            color=alt.Color("region:N", legend=alt.Legend(title="지역", orient="right")),
-            strokeDash=alt.StrokeDash("region:N"),
+            color=alt.Color(f"{group_col}:N", legend=alt.Legend(title="", orient="top")),
+            strokeDash=alt.StrokeDash(f"{group_col}:N"),
             tooltip=[
                 alt.Tooltip("month:T", title="월", format="%Y-%m"),
-                alt.Tooltip("region:N", title="지역"),
+                alt.Tooltip(f"{group_col}:N", title="이름"),
                 alt.Tooltip("price_억:Q", title="평균가(억)", format=".2f"),
                 alt.Tooltip("trade_count:Q", title="거래건수"),
             ],
         )
         .properties(
-            title=f"{'📈 매매가' if trade_type == '매매' else '📉 전세가'} 추이",
-            height=350,
+            title=alt.TitleParams(text=title, fontSize=16, anchor="start"),
+            height=400,
         )
         .interactive()
     )
@@ -233,172 +160,42 @@ def create_region_comparison_chart(df: pd.DataFrame, trade_type: str):
     return chart
 
 
+def create_trade_volume_chart(df: pd.DataFrame, group_col: str):
+    """거래량 차트"""
+
+    trade_df = df.groupby(["month", group_col, "type"])["trade_count"].sum().reset_index()
+
+    chart = (
+        alt.Chart(trade_df)
+        .mark_bar(opacity=0.8)
+        .encode(
+            x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m")),
+            y=alt.Y("trade_count:Q", title="거래건수", stack=None),
+            color=alt.Color(f"{group_col}:N", legend=alt.Legend(orient="right")),
+            column=alt.Column(
+                "type:N",
+                title="거래유형",
+                header=alt.Header(labelFontSize=14),
+            ),
+            tooltip=[
+                alt.Tooltip("month:T", format="%Y-%m"),
+                alt.Tooltip(f"{group_col}:N"),
+                alt.Tooltip("trade_count:Q", title="건수"),
+            ],
+        )
+        .properties(width=350, height=250)
+        .interactive()
+    )
+
+    return chart
+
+
 # --- UI ---
-tab1, tab2 = st.tabs(["🏢 아파트별 추이", "🏘️ 동(지역)별 추이"])
+# 탭 순서 변경: 동(지역)별 추이가 먼저
+tab1, tab2 = st.tabs(["🏘️ 동(지역)별 추이", "🏢 아파트별 추이"])
 
+# ==================== 동(지역)별 추이 ====================
 with tab1:
-    st.subheader("🏢 아파트별 매매/전세 추이")
-
-    try:
-        apt_list = load_available_apartments()
-
-        if not apt_list.empty:
-            # 지역 -> 아파트 연계 선택
-            col1, col2 = st.columns(2)
-
-            with col1:
-                regions = sorted(apt_list["region"].unique().tolist())
-                selected_region = st.selectbox("🏘️ 지역(동) 선택", regions, key="apt_region")
-
-            with col2:
-                apts_in_region = apt_list[apt_list["region"] == selected_region]["apartment_name"].tolist()
-                selected_apt = st.selectbox("🏢 아파트 선택", apts_in_region, key="apt_name")
-
-            if selected_apt:
-                st.markdown("---")
-
-                with st.spinner(f"'{selected_apt}' 데이터 로딩 중..."):
-                    price_df = load_apartment_price_history(selected_apt)
-
-                if not price_df.empty:
-                    # 평형 선택
-                    area_types = ["전체"] + sorted(price_df["area_type"].unique().tolist())
-                    selected_area = st.selectbox("📐 평형 선택", area_types)
-
-                    if selected_area != "전체":
-                        chart_df = price_df[price_df["area_type"] == selected_area]
-                    else:
-                        chart_df = price_df
-
-                    # 최근 거래 요약 (상단 KPI)
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        recent_maemae = chart_df[chart_df["type"] == "매매"].sort_values("date", ascending=False)
-                        if not recent_maemae.empty:
-                            latest = recent_maemae.iloc[0]
-                            st.metric(
-                                "🏷️ 최근 매매가",
-                                f"{latest['price_억']:.2f}억",
-                                f"{latest['date'].strftime('%Y-%m-%d')}",
-                            )
-
-                    with col2:
-                        recent_jeonsae = chart_df[chart_df["type"] == "전세"].sort_values("date", ascending=False)
-                        if not recent_jeonsae.empty:
-                            latest = recent_jeonsae.iloc[0]
-                            st.metric(
-                                "🔑 최근 전세가",
-                                f"{latest['price_억']:.2f}억",
-                                f"{latest['date'].strftime('%Y-%m-%d')}",
-                            )
-
-                    with col3:
-                        if not recent_maemae.empty and not recent_jeonsae.empty:
-                            gap = recent_maemae.iloc[0]["price_억"] - recent_jeonsae.iloc[0]["price_억"]
-                            rate = (recent_jeonsae.iloc[0]["price_억"] / recent_maemae.iloc[0]["price_억"]) * 100
-                            st.metric("📊 전세가율", f"{rate:.1f}%", f"갭 {gap:.2f}억")
-
-                    st.markdown("---")
-
-                    # 메인 차트: 갭 영역 차트
-                    st.markdown(f"#### 📈 {selected_apt} 시세 추이")
-
-                    area_chart = create_area_chart(chart_df, f"{selected_apt} 매매/전세 추이")
-                    if area_chart:
-                        st.altair_chart(area_chart, use_container_width=True)
-
-                    # 평형별 상세 (전체 선택 시) - 버튼 기반 UI
-                    if selected_area == "전체" and len(price_df["area_type"].unique()) > 1:
-                        with st.expander("📐 평형별 상세 차트", expanded=True):
-                            area_types_list = sorted(price_df["area_type"].unique())
-
-                            # 세션 상태 초기화
-                            if "selected_detail_area" not in st.session_state:
-                                st.session_state.selected_detail_area = area_types_list[0]
-
-                            # 평형 버튼 나열
-                            st.markdown("**평형 선택:**")
-                            btn_cols = st.columns(min(len(area_types_list), 6))
-
-                            for idx, area in enumerate(area_types_list):
-                                col_idx = idx % len(btn_cols)
-                                with btn_cols[col_idx]:
-                                    # 선택된 버튼 강조
-                                    is_selected = st.session_state.selected_detail_area == area
-                                    btn_type = "primary" if is_selected else "secondary"
-                                    if st.button(
-                                        f"📐 {area}",
-                                        key=f"area_btn_{area}",
-                                        use_container_width=True,
-                                        type=btn_type,
-                                    ):
-                                        st.session_state.selected_detail_area = area
-                                        st.rerun()
-
-                            st.divider()
-
-                            # 선택된 평형 차트만 표시
-                            selected_detail = st.session_state.selected_detail_area
-                            if selected_detail in area_types_list:
-                                area_df = price_df[price_df["area_type"] == selected_detail]
-                                chart = create_price_chart(area_df, f"{selected_detail} 타입 상세")
-                                st.altair_chart(chart, use_container_width=True)
-
-                                # 선택된 평형 요약 정보
-                                st.markdown(f"##### 📊 {selected_detail} 요약")
-                                sum_col1, sum_col2, sum_col3 = st.columns(3)
-
-                                maemae_data = area_df[area_df["type"] == "매매"]
-                                jeonsae_data = area_df[area_df["type"] == "전세"]
-
-                                with sum_col1:
-                                    if not maemae_data.empty:
-                                        latest_m = maemae_data.sort_values("date", ascending=False).iloc[0]
-                                        st.metric(
-                                            "최근 매매가",
-                                            f"{latest_m['price_억']:.2f}억",
-                                        )
-                                    else:
-                                        st.metric("최근 매매가", "-")
-
-                                with sum_col2:
-                                    if not jeonsae_data.empty:
-                                        latest_j = jeonsae_data.sort_values("date", ascending=False).iloc[0]
-                                        st.metric(
-                                            "최근 전세가",
-                                            f"{latest_j['price_억']:.2f}억",
-                                        )
-                                    else:
-                                        st.metric("최근 전세가", "-")
-
-                                with sum_col3:
-                                    st.metric(
-                                        "거래건수",
-                                        f"{len(maemae_data) + len(jeonsae_data)}건",
-                                    )
-
-                    # 상세 데이터
-                    with st.expander("📋 상세 거래 내역"):
-                        display_df = chart_df.copy()
-                        display_df["가격"] = display_df["price_억"].apply(lambda x: f"{x:.2f}억")
-                        display_df["날짜"] = display_df["date"].dt.strftime("%Y-%m-%d")
-                        display_df = display_df[["날짜", "area_type", "가격", "type"]]
-                        display_df.columns = ["날짜", "평형", "가격", "거래유형"]
-                        st.dataframe(
-                            display_df.sort_values("날짜", ascending=False),
-                            use_container_width=True,
-                            hide_index=True,
-                        )
-                else:
-                    st.warning(f"'{selected_apt}'의 거래 데이터가 없습니다.")
-        else:
-            st.warning("아파트 목록을 불러올 수 없습니다.")
-
-    except Exception as e:
-        st.error(f"데이터 로딩 오류: {e}")
-
-with tab2:
     st.subheader("🏘️ 동별 월간 평균가 추이")
 
     try:
@@ -412,6 +209,7 @@ with tab2:
                 regions,
                 default=regions[:3] if len(regions) >= 3 else regions,
                 max_selections=5,
+                key="region_select",
             )
 
             if selected_regions:
@@ -423,46 +221,113 @@ with tab2:
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    maemae_chart = create_region_comparison_chart(filtered_df, "매매")
+                    maemae_chart = create_comparison_chart(filtered_df, "매매", "region", "📈 매매가 추이")
                     st.altair_chart(maemae_chart, use_container_width=True)
 
                 with col2:
-                    jeonsae_chart = create_region_comparison_chart(filtered_df, "전세")
+                    jeonsae_chart = create_comparison_chart(filtered_df, "전세", "region", "📉 전세가 추이")
                     st.altair_chart(jeonsae_chart, use_container_width=True)
 
                 # 거래량 바 차트
                 st.markdown("#### 📊 월별 거래량")
-
-                trade_df = filtered_df.groupby(["month", "region", "type"])["trade_count"].sum().reset_index()
-
-                trade_chart = (
-                    alt.Chart(trade_df)
-                    .mark_bar(opacity=0.8)
-                    .encode(
-                        x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m")),
-                        y=alt.Y("trade_count:Q", title="거래건수", stack=None),
-                        color=alt.Color("region:N", legend=alt.Legend(orient="right")),
-                        column=alt.Column(
-                            "type:N",
-                            title="거래유형",
-                            header=alt.Header(labelFontSize=14),
-                        ),
-                        tooltip=[
-                            alt.Tooltip("month:T", format="%Y-%m"),
-                            alt.Tooltip("region:N"),
-                            alt.Tooltip("trade_count:Q", title="건수"),
-                        ],
-                    )
-                    .properties(width=350, height=250)
-                    .interactive()
-                )
-
+                trade_chart = create_trade_volume_chart(filtered_df, "region")
                 st.altair_chart(trade_chart, use_container_width=True)
 
             else:
                 st.info("비교할 지역을 선택해주세요.")
         else:
             st.warning("데이터가 없습니다.")
+
+    except Exception as e:
+        st.error(f"데이터 로딩 오류: {e}")
+
+
+# ==================== 아파트별 추이 ====================
+with tab2:
+    st.subheader("🏢 아파트별 매매/전세 추이")
+
+    try:
+        apt_list = load_available_apartments()
+
+        if not apt_list.empty:
+            # 지역 선택
+            regions = sorted(apt_list["region"].unique().tolist())
+            selected_region = st.selectbox("🏘️ 지역(동) 선택", regions, key="apt_region")
+
+            # 해당 지역의 아파트 목록
+            apts_in_region = apt_list[apt_list["region"] == selected_region]["apartment_name"].tolist()
+
+            # 아파트 복수 선택
+            selected_apts = st.multiselect(
+                "🏢 비교할 아파트 선택 (최대 5개)",
+                apts_in_region,
+                default=apts_in_region[:1] if apts_in_region else [],
+                max_selections=5,
+                key="apt_multi_select",
+            )
+
+            if selected_apts:
+                st.markdown("---")
+
+                with st.spinner("데이터 로딩 중..."):
+                    # 여러 아파트 데이터 한 번에 로딩
+                    price_df = load_apartments_price_history(tuple(selected_apts))
+
+                if not price_df.empty:
+                    # 매매/전세 분리 차트 (동별과 동일한 레이아웃)
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        maemae_chart = create_comparison_chart(price_df, "매매", "apartment_name", "📈 매매가 추이")
+                        st.altair_chart(maemae_chart, use_container_width=True)
+
+                    with col2:
+                        jeonsae_chart = create_comparison_chart(price_df, "전세", "apartment_name", "📉 전세가 추이")
+                        st.altair_chart(jeonsae_chart, use_container_width=True)
+
+                    # 거래량 차트
+                    st.markdown("#### 📊 월별 거래량")
+                    trade_chart = create_trade_volume_chart(price_df, "apartment_name")
+                    st.altair_chart(trade_chart, use_container_width=True)
+
+                    # 최근 시세 요약 테이블
+                    st.markdown("#### 📋 최근 시세 요약")
+
+                    summary_data = []
+                    for apt in selected_apts:
+                        apt_df = price_df[price_df["apartment_name"] == apt]
+
+                        maemae_df = apt_df[apt_df["type"] == "매매"].sort_values("month", ascending=False)
+                        jeonsae_df = apt_df[apt_df["type"] == "전세"].sort_values("month", ascending=False)
+
+                        latest_maemae = maemae_df.iloc[0]["price_억"] if not maemae_df.empty else None
+                        latest_jeonsae = jeonsae_df.iloc[0]["price_억"] if not jeonsae_df.empty else None
+
+                        jeonse_rate = None
+                        if latest_maemae and latest_jeonsae:
+                            jeonse_rate = (latest_jeonsae / latest_maemae) * 100
+
+                        summary_data.append(
+                            {
+                                "아파트": apt,
+                                "최근 매매가": f"{latest_maemae:.2f}억" if latest_maemae else "-",
+                                "최근 전세가": f"{latest_jeonsae:.2f}억" if latest_jeonsae else "-",
+                                "전세가율": f"{jeonse_rate:.1f}%" if jeonse_rate else "-",
+                                "갭": f"{latest_maemae - latest_jeonsae:.2f}억"
+                                if latest_maemae and latest_jeonsae
+                                else "-",
+                            }
+                        )
+
+                    summary_df = pd.DataFrame(summary_data)
+                    st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+                else:
+                    st.warning("선택한 아파트의 거래 데이터가 없습니다.")
+            else:
+                st.info("비교할 아파트를 선택해주세요.")
+        else:
+            st.warning("아파트 목록을 불러올 수 없습니다.")
 
     except Exception as e:
         st.error(f"데이터 로딩 오류: {e}")

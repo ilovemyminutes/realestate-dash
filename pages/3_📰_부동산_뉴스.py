@@ -1,16 +1,7 @@
-"""
-📰 부동산 뉴스 페이지
-- 아파트별 맞춤 뉴스
-- 지역별 부동산 이슈
-"""
-
 import json
-import sys
 
 import pandas as pd
 import streamlit as st
-
-sys.path.append(".")
 
 st.set_page_config(page_title="부동산 뉴스", page_icon="📰", layout="wide")
 
@@ -64,15 +55,11 @@ with tab1:
         col1, col2 = st.columns([2, 1])
 
         with col1:
-            selected_apt = st.selectbox(
-                "🏢 아파트 선택", available_apts, key="apt_news_select"
-            )
+            selected_apt = st.selectbox("🏢 아파트 선택", available_apts, key="apt_news_select")
 
         with col2:
             apt_data = apt_news["apartments"][selected_apt]
-            relevance_emoji = (
-                "🔥" if apt_data["relevance_score"] == "very_high" else "✅"
-            )
+            relevance_emoji = "🔥" if apt_data["relevance_score"] == "very_high" else "✅"
             st.metric(f"{relevance_emoji} 관련 뉴스", f"{apt_data['news_count']}건")
 
         st.info(
@@ -106,11 +93,7 @@ with tab1:
                         "아파트": apt_name,
                         "지역": data["region"],
                         "관련 뉴스": data["news_count"],
-                        "관련도": (
-                            "🔥 매우높음"
-                            if data["relevance_score"] == "very_high"
-                            else "✅ 높음"
-                        ),
+                        "관련도": ("🔥 매우높음" if data["relevance_score"] == "very_high" else "✅ 높음"),
                         "요약": data["summary"][:50] + "...",
                     }
                 )
@@ -133,9 +116,7 @@ with tab2:
         col1, col2 = st.columns([1, 3])
 
         with col1:
-            selected_region = st.selectbox(
-                "🏘️ 지역 선택", available_regions, key="region_news_select"
-            )
+            selected_region = st.selectbox("🏘️ 지역 선택", available_regions, key="region_news_select")
 
             st.caption(f"🕐 업데이트: {region_news['last_updated'][:10]}")
 
@@ -207,9 +188,7 @@ with tab3:
             st.markdown("#### 💡 트렌드 인사이트")
 
             for keyword in selected_keywords:
-                kw_df = filtered_df[filtered_df["keyword"] == keyword].sort_values(
-                    "period"
-                )
+                kw_df = filtered_df[filtered_df["keyword"] == keyword].sort_values("period")
                 if len(kw_df) >= 2:
                     latest = kw_df.iloc[-1]["ratio"]
                     prev = kw_df.iloc[-2]["ratio"]
