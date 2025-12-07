@@ -1,3 +1,5 @@
+from datetime import date
+
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -14,6 +16,31 @@ st.set_page_config(page_title="매매/전세 추이", page_icon="📉", layout="
 
 st.title("📉 매매/전세 추이")
 st.markdown("동별, 아파트별 **매매가**와 **전세가**의 시계열 변화를 분석합니다.")
+
+# --- 사이드바: 기간 선택 ---
+with st.sidebar:
+    st.header("📅 데이터 기간 설정")
+
+    # 기본값: 2025-01-01 ~ 오늘
+    default_start = date(2025, 1, 1)
+    default_end = date.today()
+
+    date_range = st.date_input(
+        "조회 기간",
+        value=(default_start, default_end),
+        min_value=date(2020, 1, 1),
+        max_value=date.today(),
+        key="date_range",
+    )
+
+    # 날짜 범위 파싱
+    if len(date_range) == 2:
+        start_date, end_date = date_range
+    else:
+        start_date, end_date = default_start, default_end
+
+    st.caption(f"📊 {start_date.strftime('%Y.%m')} ~ {end_date.strftime('%Y.%m')}")
+
 st.markdown("---")
 
 # 색상 팔레트 (아파트 비교용)
@@ -131,27 +158,51 @@ def load_region_price_trend():
 
 # --- 차트 함수 ---
 def create_comparison_chart(df: pd.DataFrame, trade_type: str, group_col: str, title: str):
-    """비교 차트 생성 (지역별 또는 아파트별)"""
+    """비교 차트 생성 (지역별 또는 아파트별) + 3개월 이동평균선"""
 
-    filtered = df[df["type"] == trade_type]
+    filtered = df[df["type"] == trade_type].copy()
 
-    chart = (
+    # 3개월 이동평균 계산 (그룹별로)
+    filtered = filtered.sort_values(["month", group_col])
+    filtered["ma3"] = filtered.groupby(group_col)["price_억"].transform(
+        lambda x: x.rolling(window=3, min_periods=1).mean()
+    )
+
+    # 원본 데이터 라인 (점 포함, 연한 색상)
+    base_line = (
         alt.Chart(filtered)
-        .mark_line(point=True, strokeWidth=2.5)
+        .mark_line(point=True, strokeWidth=1.5, opacity=0.5)
         .encode(
             x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
             y=alt.Y("price_억:Q", title="평균가격 (억원)", scale=alt.Scale(zero=False)),
             color=alt.Color(f"{group_col}:N", legend=alt.Legend(title="", orient="top")),
-            strokeDash=alt.StrokeDash(f"{group_col}:N"),
             tooltip=[
                 alt.Tooltip("month:T", title="월", format="%Y-%m"),
                 alt.Tooltip(f"{group_col}:N", title="이름"),
-                alt.Tooltip("price_억:Q", title="평균가(억)", format=".2f"),
+                alt.Tooltip("price_억:Q", title="실제가(억)", format=".2f"),
+                alt.Tooltip("ma3:Q", title="3개월MA(억)", format=".2f"),
                 alt.Tooltip("trade_count:Q", title="거래건수"),
             ],
         )
+    )
+
+    # 3개월 이동평균선 (부드러운 곡선, 진한 색상)
+    ma_line = (
+        alt.Chart(filtered)
+        .mark_line(strokeWidth=3, interpolate="monotone")  # 부드러운 곡선
+        .encode(
+            x="month:T",
+            y=alt.Y("ma3:Q", title="평균가격 (억원)"),
+            color=alt.Color(f"{group_col}:N"),
+            strokeDash=alt.StrokeDash(f"{group_col}:N"),
+        )
+    )
+
+    # 레이어 결합
+    chart = (
+        (base_line + ma_line)
         .properties(
-            title=alt.TitleParams(text=title, fontSize=16, anchor="start"),
+            title=alt.TitleParams(text=title, subtitle="실선: 3개월 이동평균 | 점선: 실제 거래가", fontSize=16),
             height=400,
         )
         .interactive()
@@ -261,7 +312,14 @@ with tab1:
             )
 
             if selected_regions:
+                # 지역 필터링
                 filtered_df = region_df[region_df["region"].isin(selected_regions)]
+
+                # 기간 필터링
+                filtered_df = filtered_df[
+                    (filtered_df["month"] >= pd.Timestamp(start_date))
+                    & (filtered_df["month"] <= pd.Timestamp(end_date))
+                ]
 
                 st.markdown("---")
 
@@ -355,6 +413,11 @@ with tab2:
                 with st.spinner("데이터 로딩 중..."):
                     # 여러 아파트 데이터 한 번에 로딩
                     price_df = load_apartments_price_history(tuple(selected_apts))
+
+                    # 기간 필터링
+                    price_df = price_df[
+                        (price_df["month"] >= pd.Timestamp(start_date)) & (price_df["month"] <= pd.Timestamp(end_date))
+                    ]
 
                 if not price_df.empty:
                     # 매매/전세 분리 차트 (동별과 동일한 레이아웃)
