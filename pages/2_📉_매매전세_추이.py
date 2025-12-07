@@ -17,44 +17,40 @@ st.set_page_config(page_title="매매/전세 추이", page_icon="📉", layout="
 st.title("📉 매매/전세 추이")
 st.markdown("동별, 아파트별 **매매가**와 **전세가**의 시계열 변화를 분석합니다.")
 
-# --- 사이드바: 필터 설정 ---
-with st.sidebar:
-    st.header("🔧 필터 설정")
+# --- 페이지 내 필터 설정 ---
+with st.expander("🔧 필터 설정", expanded=False):
+    filter_col1, filter_col2 = st.columns(2)
 
-    # 기간 설정
-    st.subheader("📅 데이터 기간")
-    default_start = date(2025, 1, 1)
-    default_end = date.today()
+    with filter_col1:
+        st.markdown("##### 📅 데이터 기간")
+        default_start = date(2025, 1, 1)
+        default_end = date.today()
 
-    date_range = st.date_input(
-        "조회 기간",
-        value=(default_start, default_end),
-        min_value=date(2020, 1, 1),
-        max_value=date.today(),
-        key="date_range",
-    )
+        date_range = st.date_input(
+            "조회 기간",
+            value=(default_start, default_end),
+            min_value=date(2020, 1, 1),
+            max_value=date.today(),
+            key="date_range",
+        )
 
-    if len(date_range) == 2:
-        start_date, end_date = date_range
-    else:
-        start_date, end_date = default_start, default_end
+        if len(date_range) == 2:
+            start_date, end_date = date_range
+        else:
+            start_date, end_date = default_start, default_end
 
-    st.caption(f"📊 {start_date.strftime('%Y.%m')} ~ {end_date.strftime('%Y.%m')}")
-
-    st.divider()
-
-    # 평형 범위 설정
-    st.subheader("📐 평형 범위")
-    area_range = st.slider(
-        "전용면적 (㎡)",
-        min_value=10,
-        max_value=200,
-        value=(59, 135),  # 기본값: 국민평형 ~ 대형
-        step=1,
-        key="area_range",
-    )
-    min_area, max_area = area_range
-    st.caption(f"📐 {min_area}㎡ ~ {max_area}㎡ (약 {min_area/3.3:.0f}평 ~ {max_area/3.3:.0f}평)")
+    with filter_col2:
+        st.markdown("##### 📐 평형 범위")
+        area_range = st.slider(
+            "전용면적 (㎡)",
+            min_value=10,
+            max_value=200,
+            value=(59, 135),  # 기본값: 국민평형 ~ 대형
+            step=1,
+            key="area_range",
+        )
+        min_area, max_area = area_range
+        st.caption(f"{min_area}㎡ ~ {max_area}㎡ (약 {min_area/3.3:.0f}평 ~ {max_area/3.3:.0f}평)")
 
 st.markdown("---")
 
