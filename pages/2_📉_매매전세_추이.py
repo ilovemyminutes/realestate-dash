@@ -45,7 +45,7 @@ with st.expander("🔧 필터 설정", expanded=False):
             "전용면적 (㎡)",
             min_value=10,
             max_value=200,
-            value=(59, 135),  # 기본값: 국민평형 ~ 대형
+            value=(50, 70),  # 기본값: 15평 ~ 21평
             step=1,
             key="area_range",
         )
