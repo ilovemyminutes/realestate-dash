@@ -160,30 +160,78 @@ def create_comparison_chart(df: pd.DataFrame, trade_type: str, group_col: str, t
     return chart
 
 
-def create_trade_volume_chart(df: pd.DataFrame, group_col: str):
-    """거래량 차트"""
+def create_trade_volume_chart(df: pd.DataFrame, group_col: str, trade_type: str = None):
+    """거래량 차트 (dodge 적용)"""
 
     trade_df = df.groupby(["month", group_col, "type"])["trade_count"].sum().reset_index()
+
+    # 특정 거래유형만 필터링
+    if trade_type:
+        trade_df = trade_df[trade_df["type"] == trade_type]
 
     chart = (
         alt.Chart(trade_df)
         .mark_bar(opacity=0.8)
         .encode(
-            x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m")),
-            y=alt.Y("trade_count:Q", title="거래건수", stack=None),
-            color=alt.Color(f"{group_col}:N", legend=alt.Legend(orient="right")),
-            column=alt.Column(
-                "type:N",
-                title="거래유형",
-                header=alt.Header(labelFontSize=14),
-            ),
+            x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
+            y=alt.Y("trade_count:Q", title="거래건수"),
+            color=alt.Color(f"{group_col}:N", legend=alt.Legend(title="", orient="top")),
+            xOffset=alt.XOffset(f"{group_col}:N"),  # dodge 효과
             tooltip=[
-                alt.Tooltip("month:T", format="%Y-%m"),
-                alt.Tooltip(f"{group_col}:N"),
+                alt.Tooltip("month:T", format="%Y-%m", title="월"),
+                alt.Tooltip(f"{group_col}:N", title="이름"),
+                alt.Tooltip("type:N", title="거래유형"),
                 alt.Tooltip("trade_count:Q", title="건수"),
             ],
         )
-        .properties(width=350, height=250)
+        .properties(
+            title=f"📊 월별 거래량 ({trade_type})" if trade_type else "📊 월별 거래량",
+            height=350,
+        )
+        .interactive()
+    )
+
+    return chart
+
+
+def create_jeonse_rate_chart(df: pd.DataFrame, group_col: str):
+    """전세가율 추이 차트"""
+
+    # 매매/전세 데이터를 피벗하여 전세가율 계산
+    pivot_df = df.pivot_table(
+        index=["month", group_col], columns="type", values="price_억", aggfunc="mean"
+    ).reset_index()
+
+    # 전세가율 계산 (매매가, 전세가 모두 있는 경우만)
+    if "매매" in pivot_df.columns and "전세" in pivot_df.columns:
+        pivot_df["전세가율"] = (pivot_df["전세"] / pivot_df["매매"]) * 100
+        pivot_df = pivot_df.dropna(subset=["전세가율"])
+    else:
+        return None
+
+    if pivot_df.empty:
+        return None
+
+    chart = (
+        alt.Chart(pivot_df)
+        .mark_line(point=True, strokeWidth=2.5)
+        .encode(
+            x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
+            y=alt.Y("전세가율:Q", title="전세가율 (%)", scale=alt.Scale(zero=False)),
+            color=alt.Color(f"{group_col}:N", legend=alt.Legend(title="", orient="top")),
+            strokeDash=alt.StrokeDash(f"{group_col}:N"),
+            tooltip=[
+                alt.Tooltip("month:T", title="월", format="%Y-%m"),
+                alt.Tooltip(f"{group_col}:N", title="이름"),
+                alt.Tooltip("전세가율:Q", title="전세가율(%)", format=".1f"),
+                alt.Tooltip("매매:Q", title="매매가(억)", format=".2f"),
+                alt.Tooltip("전세:Q", title="전세가(억)", format=".2f"),
+            ],
+        )
+        .properties(
+            title="📈 전세가율 추이",
+            height=350,
+        )
         .interactive()
     )
 
@@ -228,10 +276,21 @@ with tab1:
                     jeonsae_chart = create_comparison_chart(filtered_df, "전세", "region", "📉 전세가 추이")
                     st.altair_chart(jeonsae_chart, use_container_width=True)
 
-                # 거래량 바 차트
-                st.markdown("#### 📊 월별 거래량")
-                trade_chart = create_trade_volume_chart(filtered_df, "region")
-                st.altair_chart(trade_chart, use_container_width=True)
+                # 거래량 & 전세가율 차트 (2열)
+                col3, col4 = st.columns(2)
+
+                with col3:
+                    # 매매 거래량 (dodge 적용)
+                    trade_chart = create_trade_volume_chart(filtered_df, "region", "매매")
+                    st.altair_chart(trade_chart, use_container_width=True)
+
+                with col4:
+                    # 전세가율 추이
+                    jeonse_rate_chart = create_jeonse_rate_chart(filtered_df, "region")
+                    if jeonse_rate_chart:
+                        st.altair_chart(jeonse_rate_chart, use_container_width=True)
+                    else:
+                        st.info("전세가율 데이터가 부족합니다.")
 
             else:
                 st.info("비교할 지역을 선택해주세요.")
@@ -309,10 +368,21 @@ with tab2:
                         jeonsae_chart = create_comparison_chart(price_df, "전세", "apartment_name", "📉 전세가 추이")
                         st.altair_chart(jeonsae_chart, use_container_width=True)
 
-                    # 거래량 차트
-                    st.markdown("#### 📊 월별 거래량")
-                    trade_chart = create_trade_volume_chart(price_df, "apartment_name")
-                    st.altair_chart(trade_chart, use_container_width=True)
+                    # 거래량 & 전세가율 차트 (2열)
+                    col3, col4 = st.columns(2)
+
+                    with col3:
+                        # 매매 거래량 (dodge 적용)
+                        trade_chart = create_trade_volume_chart(price_df, "apartment_name", "매매")
+                        st.altair_chart(trade_chart, use_container_width=True)
+
+                    with col4:
+                        # 전세가율 추이
+                        jeonse_rate_chart = create_jeonse_rate_chart(price_df, "apartment_name")
+                        if jeonse_rate_chart:
+                            st.altair_chart(jeonse_rate_chart, use_container_width=True)
+                        else:
+                            st.info("전세가율 데이터가 부족합니다.")
 
                     # 최근 시세 요약 테이블
                     st.markdown("#### 📋 최근 시세 요약")
