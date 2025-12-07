@@ -1,10 +1,6 @@
-import sys
-
 import altair as alt
 import pandas as pd
 import streamlit as st
-
-sys.path.append(".")
 
 from utils.bq_client import (
     FILTER_EXCLUDE_JUSANGBOKHAP,
@@ -133,9 +129,7 @@ def create_price_chart(df: pd.DataFrame, title: str, area_type: str = None):
         y=alt.Y("price_억:Q", title="가격 (억원)", scale=alt.Scale(zero=False)),
         color=alt.Color(
             "type:N",
-            scale=alt.Scale(
-                domain=["매매", "전세"], range=[COLORS["매매"], COLORS["전세"]]
-            ),
+            scale=alt.Scale(domain=["매매", "전세"], range=[COLORS["매매"], COLORS["전세"]]),
             legend=alt.Legend(title="거래유형", orient="top"),
         ),
         tooltip=[
@@ -153,9 +147,7 @@ def create_price_chart(df: pd.DataFrame, title: str, area_type: str = None):
     # 결합
     chart = (
         (line + points)
-        .properties(
-            title=alt.TitleParams(text=title, fontSize=16, anchor="start"), height=350
-        )
+        .properties(title=alt.TitleParams(text=title, fontSize=16, anchor="start"), height=350)
         .configure_axis(labelFontSize=11, titleFontSize=12, gridOpacity=0.3)
         .configure_legend(labelFontSize=12, titleFontSize=12)
         .interactive()
@@ -168,9 +160,7 @@ def create_area_chart(df: pd.DataFrame, title: str):
     """매매/전세 영역 차트 (갭 시각화)"""
 
     # 피벗으로 매매/전세 분리
-    pivot_df = df.pivot_table(
-        index="date", columns="type", values="price_억", aggfunc="mean"
-    ).reset_index()
+    pivot_df = df.pivot_table(index="date", columns="type", values="price_억", aggfunc="mean").reset_index()
 
     if "매매" not in pivot_df.columns or "전세" not in pivot_df.columns:
         return None
@@ -178,9 +168,7 @@ def create_area_chart(df: pd.DataFrame, title: str):
     pivot_df["gap"] = pivot_df["매매"] - pivot_df["전세"]
 
     # 기본 차트
-    base = alt.Chart(pivot_df).encode(
-        x=alt.X("date:T", title="날짜", axis=alt.Axis(format="%Y-%m"))
-    )
+    base = alt.Chart(pivot_df).encode(x=alt.X("date:T", title="날짜", axis=alt.Axis(format="%Y-%m")))
 
     # 매매가 라인
     maemae_line = base.mark_line(color=COLORS["매매"], strokeWidth=3).encode(
@@ -206,9 +194,7 @@ def create_area_chart(df: pd.DataFrame, title: str):
     chart = (
         (area + jeonsae_line + maemae_line)
         .properties(
-            title=alt.TitleParams(
-                text=title, subtitle="음영: 매매-전세 갭", fontSize=16
-            ),
+            title=alt.TitleParams(text=title, subtitle="음영: 매매-전세 갭", fontSize=16),
             height=400,
         )
         .interactive()
@@ -226,13 +212,9 @@ def create_region_comparison_chart(df: pd.DataFrame, trade_type: str):
         alt.Chart(filtered)
         .mark_line(point=True, strokeWidth=2.5)
         .encode(
-            x=alt.X(
-                "month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)
-            ),
+            x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
             y=alt.Y("price_억:Q", title="평균가격 (억원)", scale=alt.Scale(zero=False)),
-            color=alt.Color(
-                "region:N", legend=alt.Legend(title="지역", orient="right")
-            ),
+            color=alt.Color("region:N", legend=alt.Legend(title="지역", orient="right")),
             strokeDash=alt.StrokeDash("region:N"),
             tooltip=[
                 alt.Tooltip("month:T", title="월", format="%Y-%m"),
@@ -266,17 +248,11 @@ with tab1:
 
             with col1:
                 regions = sorted(apt_list["region"].unique().tolist())
-                selected_region = st.selectbox(
-                    "🏘️ 지역(동) 선택", regions, key="apt_region"
-                )
+                selected_region = st.selectbox("🏘️ 지역(동) 선택", regions, key="apt_region")
 
             with col2:
-                apts_in_region = apt_list[apt_list["region"] == selected_region][
-                    "apartment_name"
-                ].tolist()
-                selected_apt = st.selectbox(
-                    "🏢 아파트 선택", apts_in_region, key="apt_name"
-                )
+                apts_in_region = apt_list[apt_list["region"] == selected_region]["apartment_name"].tolist()
+                selected_apt = st.selectbox("🏢 아파트 선택", apts_in_region, key="apt_name")
 
             if selected_apt:
                 st.markdown("---")
@@ -286,9 +262,7 @@ with tab1:
 
                 if not price_df.empty:
                     # 평형 선택
-                    area_types = ["전체"] + sorted(
-                        price_df["area_type"].unique().tolist()
-                    )
+                    area_types = ["전체"] + sorted(price_df["area_type"].unique().tolist())
                     selected_area = st.selectbox("📐 평형 선택", area_types)
 
                     if selected_area != "전체":
@@ -300,9 +274,7 @@ with tab1:
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        recent_maemae = chart_df[
-                            chart_df["type"] == "매매"
-                        ].sort_values("date", ascending=False)
+                        recent_maemae = chart_df[chart_df["type"] == "매매"].sort_values("date", ascending=False)
                         if not recent_maemae.empty:
                             latest = recent_maemae.iloc[0]
                             st.metric(
@@ -312,9 +284,7 @@ with tab1:
                             )
 
                     with col2:
-                        recent_jeonsae = chart_df[
-                            chart_df["type"] == "전세"
-                        ].sort_values("date", ascending=False)
+                        recent_jeonsae = chart_df[chart_df["type"] == "전세"].sort_values("date", ascending=False)
                         if not recent_jeonsae.empty:
                             latest = recent_jeonsae.iloc[0]
                             st.metric(
@@ -325,14 +295,8 @@ with tab1:
 
                     with col3:
                         if not recent_maemae.empty and not recent_jeonsae.empty:
-                            gap = (
-                                recent_maemae.iloc[0]["price_억"]
-                                - recent_jeonsae.iloc[0]["price_억"]
-                            )
-                            rate = (
-                                recent_jeonsae.iloc[0]["price_억"]
-                                / recent_maemae.iloc[0]["price_억"]
-                            ) * 100
+                            gap = recent_maemae.iloc[0]["price_억"] - recent_jeonsae.iloc[0]["price_억"]
+                            rate = (recent_jeonsae.iloc[0]["price_억"] / recent_maemae.iloc[0]["price_억"]) * 100
                             st.metric("📊 전세가율", f"{rate:.1f}%", f"갭 {gap:.2f}억")
 
                     st.markdown("---")
@@ -340,30 +304,84 @@ with tab1:
                     # 메인 차트: 갭 영역 차트
                     st.markdown(f"#### 📈 {selected_apt} 시세 추이")
 
-                    area_chart = create_area_chart(
-                        chart_df, f"{selected_apt} 매매/전세 추이"
-                    )
+                    area_chart = create_area_chart(chart_df, f"{selected_apt} 매매/전세 추이")
                     if area_chart:
                         st.altair_chart(area_chart, use_container_width=True)
 
-                    # 평형별 상세 (전체 선택 시)
-                    if (
-                        selected_area == "전체"
-                        and len(price_df["area_type"].unique()) > 1
-                    ):
-                        with st.expander("📐 평형별 상세 차트"):
-                            for area in sorted(price_df["area_type"].unique()):
-                                area_df = price_df[price_df["area_type"] == area]
-                                chart = create_price_chart(area_df, f"{area} 타입")
+                    # 평형별 상세 (전체 선택 시) - 버튼 기반 UI
+                    if selected_area == "전체" and len(price_df["area_type"].unique()) > 1:
+                        with st.expander("📐 평형별 상세 차트", expanded=True):
+                            area_types_list = sorted(price_df["area_type"].unique())
+
+                            # 세션 상태 초기화
+                            if "selected_detail_area" not in st.session_state:
+                                st.session_state.selected_detail_area = area_types_list[0]
+
+                            # 평형 버튼 나열
+                            st.markdown("**평형 선택:**")
+                            btn_cols = st.columns(min(len(area_types_list), 6))
+
+                            for idx, area in enumerate(area_types_list):
+                                col_idx = idx % len(btn_cols)
+                                with btn_cols[col_idx]:
+                                    # 선택된 버튼 강조
+                                    is_selected = st.session_state.selected_detail_area == area
+                                    btn_type = "primary" if is_selected else "secondary"
+                                    if st.button(
+                                        f"📐 {area}",
+                                        key=f"area_btn_{area}",
+                                        use_container_width=True,
+                                        type=btn_type,
+                                    ):
+                                        st.session_state.selected_detail_area = area
+                                        st.rerun()
+
+                            st.divider()
+
+                            # 선택된 평형 차트만 표시
+                            selected_detail = st.session_state.selected_detail_area
+                            if selected_detail in area_types_list:
+                                area_df = price_df[price_df["area_type"] == selected_detail]
+                                chart = create_price_chart(area_df, f"{selected_detail} 타입 상세")
                                 st.altair_chart(chart, use_container_width=True)
-                                st.divider()
+
+                                # 선택된 평형 요약 정보
+                                st.markdown(f"##### 📊 {selected_detail} 요약")
+                                sum_col1, sum_col2, sum_col3 = st.columns(3)
+
+                                maemae_data = area_df[area_df["type"] == "매매"]
+                                jeonsae_data = area_df[area_df["type"] == "전세"]
+
+                                with sum_col1:
+                                    if not maemae_data.empty:
+                                        latest_m = maemae_data.sort_values("date", ascending=False).iloc[0]
+                                        st.metric(
+                                            "최근 매매가",
+                                            f"{latest_m['price_억']:.2f}억",
+                                        )
+                                    else:
+                                        st.metric("최근 매매가", "-")
+
+                                with sum_col2:
+                                    if not jeonsae_data.empty:
+                                        latest_j = jeonsae_data.sort_values("date", ascending=False).iloc[0]
+                                        st.metric(
+                                            "최근 전세가",
+                                            f"{latest_j['price_억']:.2f}억",
+                                        )
+                                    else:
+                                        st.metric("최근 전세가", "-")
+
+                                with sum_col3:
+                                    st.metric(
+                                        "거래건수",
+                                        f"{len(maemae_data) + len(jeonsae_data)}건",
+                                    )
 
                     # 상세 데이터
                     with st.expander("📋 상세 거래 내역"):
                         display_df = chart_df.copy()
-                        display_df["가격"] = display_df["price_억"].apply(
-                            lambda x: f"{x:.2f}억"
-                        )
+                        display_df["가격"] = display_df["price_억"].apply(lambda x: f"{x:.2f}억")
                         display_df["날짜"] = display_df["date"].dt.strftime("%Y-%m-%d")
                         display_df = display_df[["날짜", "area_type", "가격", "type"]]
                         display_df.columns = ["날짜", "평형", "가격", "거래유형"]
@@ -415,11 +433,7 @@ with tab2:
                 # 거래량 바 차트
                 st.markdown("#### 📊 월별 거래량")
 
-                trade_df = (
-                    filtered_df.groupby(["month", "region", "type"])["trade_count"]
-                    .sum()
-                    .reset_index()
-                )
+                trade_df = filtered_df.groupby(["month", "region", "type"])["trade_count"].sum().reset_index()
 
                 trade_chart = (
                     alt.Chart(trade_df)
