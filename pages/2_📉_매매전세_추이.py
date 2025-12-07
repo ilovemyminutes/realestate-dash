@@ -168,10 +168,10 @@ def create_comparison_chart(df: pd.DataFrame, trade_type: str, group_col: str, t
         lambda x: x.rolling(window=3, min_periods=1).mean()
     )
 
-    # 원본 데이터 라인 (점 포함, 연한 색상)
+    # 원본 데이터 라인 (점 포함, 굵은 선)
     base_line = (
         alt.Chart(filtered)
-        .mark_line(point=True, strokeWidth=1.5, opacity=0.5)
+        .mark_line(point=True, strokeWidth=2.5, opacity=0.7)
         .encode(
             x=alt.X("month:T", title="월", axis=alt.Axis(format="%Y-%m", labelAngle=-45)),
             y=alt.Y("price_억:Q", title="평균가격 (억원)", scale=alt.Scale(zero=False)),
@@ -186,15 +186,15 @@ def create_comparison_chart(df: pd.DataFrame, trade_type: str, group_col: str, t
         )
     )
 
-    # 3개월 이동평균선 (부드러운 곡선, 진한 색상)
+    # 3개월 이동평균선 (부드러운 곡선, 얇은 선)
     ma_line = (
         alt.Chart(filtered)
-        .mark_line(strokeWidth=3, interpolate="monotone")  # 부드러운 곡선
+        .mark_line(strokeWidth=1.5, interpolate="monotone", opacity=0.9)  # 부드러운 곡선
         .encode(
             x="month:T",
             y=alt.Y("ma3:Q", title="평균가격 (억원)"),
             color=alt.Color(f"{group_col}:N"),
-            strokeDash=alt.StrokeDash(f"{group_col}:N"),
+            strokeDash=alt.value([4, 4]),  # 점선으로 구분
         )
     )
 
