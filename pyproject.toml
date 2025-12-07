@@ -1,0 +1,44 @@
+[project]
+name = "realestate-dash"
+version = "0.1.0"
+description = "부동산 인사이트 대시보드"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "google-cloud-bigquery>=3.0.0",
+    "pyarrow>=14.0.0",
+    "db-dtypes>=1.0.0",
+    "ruff>=0.1.0",
+    "pytest>=7.0.0",
+    "jupyterlab>=4.0.0",
+    "ipykernel>=6.0.0",
+    "hydra-core>=1.3.2",
+    "pandas-gbq>=0.19.0",
+    "streamlit>=1.50.0",
+    "plotly>=6.5.0",
+    "google-cloud-aiplatform>=1.38.0",
+    "matplotlib>=3.10.7",
+]
+
+[tool.setuptools]
+packages = ["workflow"]
+py-modules = ["api_server"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
