@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 
 credential/
-data/
 docs/
+.streamlit/
 
 # C extensions
 *.so
