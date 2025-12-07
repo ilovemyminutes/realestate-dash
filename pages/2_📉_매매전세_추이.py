@@ -250,21 +250,45 @@ with tab2:
         apt_list = load_available_apartments()
 
         if not apt_list.empty:
-            # 지역 선택
+            # 지역 복수 선택
             regions = sorted(apt_list["region"].unique().tolist())
-            selected_region = st.selectbox("🏘️ 지역(동) 선택", regions, key="apt_region")
+            selected_regions = st.multiselect(
+                "🏘️ 지역(동) 선택 (복수 선택 가능)",
+                regions,
+                default=regions[:1] if regions else [],
+                key="apt_regions",
+            )
 
-            # 해당 지역의 아파트 목록
-            apts_in_region = apt_list[apt_list["region"] == selected_region]["apartment_name"].tolist()
+            # 선택한 지역들의 아파트 목록
+            if selected_regions:
+                # 지역별로 아파트 이름에 지역 표시 추가 (동명이 다른 경우 구분)
+                apts_in_regions = (
+                    apt_list[apt_list["region"].isin(selected_regions)]
+                    .apply(lambda x: f"{x['apartment_name']} ({x['region']})", axis=1)
+                    .tolist()
+                )
+                # 원본 아파트 이름 매핑
+                apt_display_to_name = dict(
+                    zip(
+                        apts_in_regions,
+                        apt_list[apt_list["region"].isin(selected_regions)]["apartment_name"].tolist(),
+                    )
+                )
+            else:
+                apts_in_regions = []
+                apt_display_to_name = {}
 
             # 아파트 복수 선택
-            selected_apts = st.multiselect(
+            selected_apt_displays = st.multiselect(
                 "🏢 비교할 아파트 선택 (최대 5개)",
-                apts_in_region,
-                default=apts_in_region[:1] if apts_in_region else [],
+                apts_in_regions,
+                default=[],
                 max_selections=5,
                 key="apt_multi_select",
             )
+
+            # 실제 아파트 이름으로 변환
+            selected_apts = [apt_display_to_name[d] for d in selected_apt_displays if d in apt_display_to_name]
 
             if selected_apts:
                 st.markdown("---")
