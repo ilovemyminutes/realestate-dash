@@ -1,0 +1,756 @@
+{
+  "last_updated": "2025-12-08T02:05:00+09:00",
+  "metadata": {
+    "total_apartments": 14,
+    "relevance_filter": "LLM-based",
+    "description": "아파트별 뉴스 (관련성 높은 뉴스만 필터링)"
+  },
+  "apartments": {
+    "헬리오시티": {
+      "region": "가락동",
+      "total_news": 13800,
+      "relevance_score": "high",
+      "news_count": 8,
+      "summary": "KB선도아파트 시세총액 1위, 거래량 상위권 유지. 종부세 282% 급등(15만→60만원). 소형(39㎡) 17.9억 신고가 기록. 상가 분양가 대비 30% 하락세.",
+      "items": [
+        {
+          "title": "줄이고, 갈아타고, 재구축하고… 새해 '3R 부동산 투자전략'",
+          "link": "https://n.news.naver.com/mnews/article/037/0000037360?sid=101",
+          "description": "KB선도아파트50 시세총액 상위 1위. 송파구 헬리오시티, 파크리오, 잠실엘스 등 서울 대장주로 꼽힘.",
+          "pubDate": "2025-12-07",
+          "source": "동아일보",
+          "relevance": "직접 언급 - 시세총액 1위"
+        },
+        {
+          "title": "서울 아파트 매물 '가뭄'인데…송파·강남·용산 증가한 이유는?",
+          "link": "https://www.ekn.kr/web/view.php?key=20251205029134759",
+          "description": "헬리오시티가 위치한 가락동, 재건축이 속도를 내는 지역에서 매물 증가세.",
+          "pubDate": "2025-12-06",
+          "source": "에너지경제",
+          "relevance": "직접 언급 - 매물 동향"
+        },
+        {
+          "title": "'아파트값 상승 적어도 10년은 갈 것'... 숫자로 나왔다",
+          "link": "https://n.news.naver.com/mnews/article/014/0005445052?sid=101",
+          "description": "헬리오시티 거래량 23건으로 송파구 내 5위. 잠실엘스·리센츠(26건)에 이어 상위권 유지.",
+          "pubDate": "2025-12-06",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 거래량 통계"
+        },
+        {
+          "title": "'우리도 올파포처럼' 문정·방이 재건축 속도",
+          "link": "https://n.news.naver.com/mnews/article/009/0005599657?sid=101",
+          "description": "헬리오시티와 올림픽파크포레온 등의 가격이 급격히 상승하며 송파구 내 다른 재건축에 영향.",
+          "pubDate": "2025-12-02",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 가격 상승 영향"
+        },
+        {
+          "title": "'작아도 강남에 한 채'...고집 부린 이 사람, 5억 벌었다",
+          "link": "https://n.news.naver.com/mnews/article/014/0005442647?sid=101",
+          "description": "헬리오시티 전용 39㎡ 17억9000만원 신고가 거래. 소형 아파트 강세 트렌드.",
+          "pubDate": "2025-12-02",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 신고가 거래"
+        },
+        {
+          "title": "내년 종부세 아크로리버파크 700만원→1200만원?…집값 뛰자 강남 '쇼크'",
+          "link": "https://n.news.naver.com/mnews/article/009/0005598875?sid=101",
+          "description": "헬리오시티 종부세 15만7000원에서 60만원으로 282.2% 급등.",
+          "pubDate": "2025-12-01",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 종부세 변동"
+        },
+        {
+          "title": "[단독]'분양가 2억 할인'...'공실 파티' 올파포, 특단 조치 내놨다",
+          "link": "https://n.news.naver.com/mnews/article/014/0005443087?sid=101",
+          "description": "헬리오시티 상가 현재 매매 가격은 분양가 대비 30% 정도 하락.",
+          "pubDate": "2025-12-02",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 상가 시세"
+        },
+        {
+          "title": "'입주장 효과도 없다' 4500가구 '입주 폭탄' 떨어진 송파구, 전셋값...",
+          "link": "https://n.news.naver.com/mnews/article/023/0003944142?sid=101",
+          "description": "2018년 12월 송파구 헬리오시티 입주 이후 전세 시장 영향 분석.",
+          "pubDate": "2025-12-01",
+          "source": "조선일보",
+          "relevance": "직접 언급 - 입주 영향"
+        }
+      ]
+    },
+    "래미안블레스티지": {
+      "region": "개포동",
+      "total_news": 6017,
+      "relevance_score": "high",
+      "news_count": 6,
+      "summary": "전용 113㎡ 44.7억원 고가 거래. 전용 49㎡ 소형 25.8억원 신고가. 단지 내 공공보행로 차단으로 지역 갈등 이슈. 개포주공 2단지 재건축 완료 단지.",
+      "items": [
+        {
+          "title": "강남보다 더 뛴 과천 … 지난주 집값 '상승률 1위'",
+          "link": "https://n.news.naver.com/mnews/article/015/0005221131?sid=101",
+          "description": "개포동 '래미안블레스티지' 전용 113㎡가 44억7000만원에 거래. 고가 거래 리스트 상위권.",
+          "pubDate": "2025-12-07",
+          "source": "한국경제",
+          "relevance": "직접 언급 - 고가 거래"
+        },
+        {
+          "title": "'엄마한테 20만원 받아와' 부모 분통…고덕 아파트에 무슨 일",
+          "link": "https://n.news.naver.com/mnews/article/015/0005221183?sid=102",
+          "description": "강남구 래미안블레스티지·디에이치아너힐즈는 개포근린공원·구룡산 등산로와 맞닿아 단지 경유 갈등.",
+          "pubDate": "2025-12-07",
+          "source": "한국경제",
+          "relevance": "직접 언급 - 보행로 갈등"
+        },
+        {
+          "title": "재산권 침해vs공공성 확보…줄잇는 단지 내 공공보행로 갈등",
+          "link": "https://n.news.naver.com/mnews/article/011/0004564400?sid=101",
+          "description": "개포동 '래미안 블레스티지'와 '개포래미안포레스트' 출입구에 담장 설치해 외부인 통행 제한.",
+          "pubDate": "2025-12-07",
+          "source": "서울경제",
+          "relevance": "직접 언급 - 담장 설치 논란"
+        },
+        {
+          "title": "'작아도 강남에 한 채'...고집 부린 이 사람, 5억 벌었다",
+          "link": "https://n.news.naver.com/mnews/article/014/0005442647?sid=101",
+          "description": "강남구 도곡동 '래미안블레스티지' 전용 49㎡가 10월 말 25억8000만원에 거래, 최고가 기록.",
+          "pubDate": "2025-12-02",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 소형 신고가"
+        },
+        {
+          "title": "개포우성 6차 재건축에 대형 건설사 운집",
+          "link": "https://www.g-enews.com/view.php?ud=202511251349414772ac06cade6e_1",
+          "description": "주공아파트 중 입주 완료: 래미안블레스티지(2단지), 디에이치아너힐즈(3단지) 등.",
+          "pubDate": "2025-11-25",
+          "source": "글로벌이코노믹",
+          "relevance": "직접 언급 - 재건축 현황"
+        },
+        {
+          "title": "'1인 1식' 안내받은 주민 욕설에…강남 50억 아파트 다이닝 직원 퇴사",
+          "link": "https://n.news.naver.com/mnews/article/016/0002562096?sid=102",
+          "description": "개포 래미안 블레스티지, 래미안 포레스트, 개포 자이 프레지던스 등 강남 고급 단지 커뮤니티 이슈.",
+          "pubDate": "2025-11-24",
+          "source": "헤럴드경제",
+          "relevance": "직접 언급 - 커뮤니티 이슈"
+        }
+      ]
+    },
+    "래미안대치팰리스": {
+      "region": "대치동",
+      "total_news": 7862,
+      "relevance_score": "high",
+      "news_count": 5,
+      "summary": "대치동 대장주. 전용 114㎡ 63억원, 전용 94㎡ 52억원 신고가 연속 경신. 매물 품귀 현상 심화, 호가 오히려 상승 중.",
+      "items": [
+        {
+          "title": "'결국은 집값 오를 것'…보유세 올라도 강남은 '버티기'",
+          "link": "https://n.news.naver.com/mnews/article/003/0013643159?sid=101",
+          "description": "강남구 대치동 대장주 래미안대치팰리스 단지 내 공인중개업소: '매물이 워낙 없다 보니 호가가 오히려 상승'.",
+          "pubDate": "2025-12-07",
+          "source": "뉴시스",
+          "relevance": "직접 언급 - 매물 품귀"
+        },
+        {
+          "title": "(부동산 양극화)토허제 묶여도…강남 아파트 '신고가'",
+          "link": "http://www.newstomato.com/ReadNews.aspx?no=1284040&inflow=N",
+          "description": "강남구 대치동 래미안대치팰리스 전용 114㎡ 10월 27일 63억원 거래, 최고가 경신.",
+          "pubDate": "2025-12-05",
+          "source": "뉴스토마토",
+          "relevance": "직접 언급 - 신고가 63억"
+        },
+        {
+          "title": "'부의 상징' 강남 불패 신화 굳건···신규 단지 주목",
+          "link": "http://www.enewstoday.co.kr/news/articleView.html?idxno=2363661",
+          "description": "서울 강남구 대치동 '래미안대치팰리스' 전용 114㎡가 63억원에 거래되며 신고가 경신.",
+          "pubDate": "2025-12-04",
+          "source": "이뉴스투데이",
+          "relevance": "직접 언급 - 신고가 상세"
+        },
+        {
+          "title": "서울 아파트 시총 한달만 14조 증가 … 강남 집주인들 '휘파람'",
+          "link": "https://biz.newdaily.co.kr/site/data/html/2025/12/02/2025120200194.html",
+          "description": "강남구 대치동 '래미안대치팰리스' 전용 94㎡ 지난달 4일 52억원 거래, 종전최고가 대비 6억원 상승.",
+          "pubDate": "2025-12-02",
+          "source": "뉴데일리",
+          "relevance": "직접 언급 - 시총 증가"
+        },
+        {
+          "title": "서울 강남 3구 아파트 경쟁력 핵심요소는 '하이엔드 커뮤니티'",
+          "link": "https://www.smartfn.co.kr/news/articleView.html?idxno=127434",
+          "description": "대치동 '래미안대치팰리스' 전용 84㎡ 올해 6월 47억원 거래, 지역 최고가 기록.",
+          "pubDate": "2025-11-26",
+          "source": "스마트에프엔",
+          "relevance": "직접 언급 - 커뮤니티 경쟁력"
+        }
+      ]
+    },
+    "리센츠": {
+      "region": "잠실동",
+      "total_news": 11342,
+      "relevance_score": "high",
+      "news_count": 6,
+      "summary": "잠실 '엘리트(엘스·리센츠·트리지움)' 대장주. 전용 84㎡ 35.7억원 신고가. 거래량 26건으로 송파구 공동 2위. 17년차에도 여전히 가격 선도.",
+      "items": [
+        {
+          "title": "강남보다 더 뛴 과천 … 지난주 집값 '상승률 1위'",
+          "link": "https://n.news.naver.com/mnews/article/015/0005221131?sid=101",
+          "description": "송파구 잠실동 '리센츠' 전용 84㎡(36억원) 고가 거래 리스트 등재.",
+          "pubDate": "2025-12-07",
+          "source": "한국경제",
+          "relevance": "직접 언급 - 고가 거래"
+        },
+        {
+          "title": "[주간 분양 트렌드] 12월 강남 '로또분양'은…상급지 수요 급증",
+          "link": "https://www.goodkyung.com/news/articleView.html?idxno=278071",
+          "description": "송파구 잠실동 '리센츠(08년 7월 입주)' 전용 84㎡ 11월 19일 35억7000만원 신고가 경신.",
+          "pubDate": "2025-12-06",
+          "source": "굿모닝경제",
+          "relevance": "직접 언급 - 신고가 상세"
+        },
+        {
+          "title": "'아파트값 상승 적어도 10년은 갈 것'... 숫자로 나왔다",
+          "link": "https://n.news.naver.com/mnews/article/014/0005445052?sid=101",
+          "description": "공동 2위 거래량 26건: 잠실동 '잠실엘스'와 '리센츠'. 송파구 대장아파트로 꼽힘.",
+          "pubDate": "2025-12-06",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 거래량 2위"
+        },
+        {
+          "title": "규제에도 상급지 불패…강남·용산, 거래절벽 속 신고가 행진",
+          "link": "https://www.etoday.co.kr/news/view/2533075",
+          "description": "송파구 잠실동 '리센츠(2008년 7월 입주)' 전용 84㎡ 11월 19일 35억7000만원 신고가.",
+          "pubDate": "2025-12-05",
+          "source": "이투데이",
+          "relevance": "직접 언급 - 규제 속 신고가"
+        },
+        {
+          "title": "'우리도 올파포처럼' 문정·방이 재건축 속도",
+          "link": "https://n.news.naver.com/mnews/article/009/0005599657?sid=101",
+          "description": "송파구 내 집값 가장 비싼 잠실. '엘리트(엘스·리센츠·트리지움)'가 전통적으로 가격 선도. 리센츠 17년차에도 35억7000만원 신고가.",
+          "pubDate": "2025-12-02",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 가격 선도"
+        },
+        {
+          "title": "[부동산 인사이트] 송파·성동-강남을 대체한 새로운 중심 축",
+          "link": "https://www.bizhankook.com/bk/article/30846",
+          "description": "잠실 엘스·리센츠·트리지움, 레이크팰리스, 헬리오시티 등 수도권 주거시장 상징적 대단지.",
+          "pubDate": "2025-12-01",
+          "source": "비즈한국",
+          "relevance": "직접 언급 - 대표 단지"
+        }
+      ]
+    },
+    "반포자이": {
+      "region": "반포동",
+      "total_news": 31558,
+      "relevance_score": "high",
+      "news_count": 4,
+      "summary": "서초구 시세총액 상위. 전용 132㎡ 60.5억원 신고가 경신. KB선도아파트 4위. 반포권 신축 단지 분양 예정으로 관심 집중.",
+      "items": [
+        {
+          "title": "줄이고, 갈아타고, 재구축하고… 새해 '3R 부동산 투자전략'",
+          "link": "https://n.news.naver.com/mnews/article/037/0000037360?sid=101",
+          "description": "KB선도아파트50 시세총액 상위 1~5위: 헬리오시티, 파크리오, 잠실엘스, 서초구 반포자이, 래미안원베일리.",
+          "pubDate": "2025-12-07",
+          "source": "동아일보",
+          "relevance": "직접 언급 - 시세총액 4위"
+        },
+        {
+          "title": "'결국은 집값 오를 것'…보유세 올라도 강남은 '버티기'",
+          "link": "https://n.news.naver.com/mnews/article/003/0013643159?sid=101",
+          "description": "서초구 반포동 '반포 자이' 전용 132㎡ 10월 29일 60억5000만원 거래, 최고가 경신.",
+          "pubDate": "2025-12-07",
+          "source": "뉴시스",
+          "relevance": "직접 언급 - 신고가 60.5억"
+        },
+        {
+          "title": "'만점 청약통장 여기에 쓰면 되는거죠?'…서울 알짜단지 내년에 총출동",
+          "link": "https://n.news.naver.com/mnews/article/009/0005601960?sid=101",
+          "description": "남쪽에는 반포자이가 위치. 반포권 내년 분양 예정 단지들과 함께 언급.",
+          "pubDate": "2025-12-07",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 인접 분양단지"
+        },
+        {
+          "title": "알짜 입지에 '두근두근' 반포·방배·노량진·장위… 내집마련 꿈은 이곳에서",
+          "link": "https://n.news.naver.com/mnews/article/009/0005601565?sid=101",
+          "description": "반포자이 인접 지역 신규 분양 단지 예정. 분양가 3.3㎡당 8500만원 안팎 전망.",
+          "pubDate": "2025-12-05",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 분양가 전망"
+        }
+      ]
+    },
+    "래미안원베일리": {
+      "region": "반포동",
+      "total_news": 16459,
+      "relevance_score": "very_high",
+      "news_count": 8,
+      "summary": "국민평형 역대 최고가 72억원 보유. 전용 59㎡(24평) 47억원 신고가. 신축 입주권 65억원 거래로 신고가 경신 임박. 보행로 담장 설치 논란.",
+      "items": [
+        {
+          "title": "강남 신축 국평, 입주권 벌써 65억… '원베일리 72억' 깨지나",
+          "link": "https://n.news.naver.com/mnews/article/014/0005445352?sid=101",
+          "description": "국평 기준 최고가(72억원) 기록 보유. 래미안원베일리 2023년 8월 입주, 당시 입주권 최고가 전용 84㎡ 45억원.",
+          "pubDate": "2025-12-07",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 국평 최고가 72억"
+        },
+        {
+          "title": "'엄마한테 20만원 받아와' 부모 분통…고덕 아파트에 무슨 일",
+          "link": "https://n.news.naver.com/mnews/article/015/0005221183?sid=102",
+          "description": "래미안 원베일리는 펜스 설치 과정에서 서초구가 불허.",
+          "pubDate": "2025-12-07",
+          "source": "한국경제",
+          "relevance": "직접 언급 - 담장 불허"
+        },
+        {
+          "title": "원베일리 45억인데 벌써 65억...국평 72억원 기록 곧 깨지나",
+          "link": "https://n.news.naver.com/mnews/article/014/0005445208?sid=101",
+          "description": "래미안원베일리 국평 최고가 72억원. 신규 입주권 65억원 거래로 신고가 경신 임박.",
+          "pubDate": "2025-12-07",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 신고가 경신 임박"
+        },
+        {
+          "title": "'내 아파트 못 지나가' 대단지 보행로 차단으로 주민 갈등 확산",
+          "link": "https://n.news.naver.com/mnews/article/417/0001117740?sid=101",
+          "description": "서초구 반포동 '래미안원베일리'(1990가구·2023년 입주) 용적률 혜택 받았지만 외부인 출입 불편 호소, 담장 설치 추진.",
+          "pubDate": "2025-12-07",
+          "source": "머니S",
+          "relevance": "직접 언급 - 보행로 논란"
+        },
+        {
+          "title": "단 3년, '80억 아파트 130억 됐다'...실화냐? 부촌지도 대변동",
+          "link": "https://n.news.naver.com/mnews/article/014/0005445109?sid=101",
+          "description": "서초구 반포동 '래미안원베일리', '아크로리버파크' 등 신축 들어서면서 강남구 제치고 부촌 1위.",
+          "pubDate": "2025-12-06",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 부촌 지도 변화"
+        },
+        {
+          "title": "'1000만원 아끼려다 4억 잃는다고요?'…우리가 놓친 함정",
+          "link": "https://n.news.naver.com/mnews/article/022/0004088055?sid=101",
+          "description": "반포 래미안 원펜타스(100억원), 래미안 원베일리(85억원) 등 초고가 단지 직거래 주의사항.",
+          "pubDate": "2025-12-06",
+          "source": "세계일보",
+          "relevance": "직접 언급 - 초고가 거래"
+        },
+        {
+          "title": "'여보, 집값 미쳤어' 한숨 푹푹 아내...24평형 50억, 실화냐",
+          "link": "https://n.news.naver.com/mnews/article/014/0005444907?sid=101",
+          "description": "반포동 '래미안원베일리' 전용 59㎡(24평형) 25층 매물 지난달 1일 47억원 거래. 3.3㎡당 약 2억원.",
+          "pubDate": "2025-12-05",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 소형 47억 신고가"
+        },
+        {
+          "title": "'만점 청약통장 여기에 쓰면 되는거죠?'…서울 알짜단지 내년에 총출동",
+          "link": "https://n.news.naver.com/mnews/article/009/0005601960?sid=101",
+          "description": "래미안 원베일리, 래미안 원펜타스, 메이플자이 등 반포·잠원권 시세 선도.",
+          "pubDate": "2025-12-07",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 시세 선도"
+        }
+      ]
+    },
+    "당산센트럴아이파크": {
+      "region": "당산동",
+      "total_news": 2419,
+      "relevance_score": "high",
+      "news_count": 6,
+      "summary": "당산동 유일한 신축 단지(2020년 입주). 월세 실거래가 TOP 기록(보증금 2.5억, 월세 290만원). e편한세상 당산 리버파크 등 주변 재건축 활발. MZ세대 아파트 선호도 조사에서 아이파크 1위.",
+      "items": [
+        {
+          "title": "'써밋' 달고 차기 대장주 '유원제일2차'…당산동이 꿈틀거린다",
+          "link": "https://n.news.naver.com/mnews/article/629/0000439938?sid=101",
+          "description": "당산동에서는 2020년 입주한 '당산센트럴아이파크'가 유일한 신축이다. 유원제일1차 재건축 2028년 3월 입주 예정.",
+          "pubDate": "2025-11-03",
+          "source": "더팩트",
+          "relevance": "직접 언급 - 당산동 유일 신축"
+        },
+        {
+          "title": "[위클리오늘] 영등포구 월세 실거래가 TOP 10",
+          "link": "http://www.weeklytoday.com/news/articleView.html?idxno=739255",
+          "description": "당산동5가 당산센트럴아이파크 71.98㎡ 17층 매물이 보증금 2억5천만원, 월세 290만원에 계약.",
+          "pubDate": "2025-11-19",
+          "source": "위클리오늘",
+          "relevance": "직접 언급 - 월세 TOP"
+        },
+        {
+          "title": "여의도만 있나…영등포 정비사업 '활발'",
+          "link": "https://n.news.naver.com/mnews/article/629/0000423278?sid=101",
+          "description": "당산동에서는 2020년 입주한 '당산센트럴아이파크'가 유일한 신축. 유원제일1차 재건축 진행 중.",
+          "pubDate": "2025-09-05",
+          "source": "더팩트",
+          "relevance": "직접 언급 - 영등포 정비사업"
+        },
+        {
+          "title": "HDC현대산업개발 '아이파크' MZ세대 선호도 1위",
+          "link": "http://www.thebigdata.co.kr/view.php?ud=20250828150746551962abca1943_23",
+          "description": "'당산센트럴아이파크는 이 동네 유일한 신축으로 단지 내 키즈카페가 있고 평지에 위치해 있다.'",
+          "pubDate": "2025-09-01",
+          "source": "더빅데이터",
+          "relevance": "직접 언급 - MZ세대 선호"
+        },
+        {
+          "title": "[아파트값 상승 톱10] 서울 영등포구 '당산푸르지오' 등",
+          "link": "https://www.etoday.co.kr/news/view/2531101",
+          "description": "당산센트럴아이파크가 속한 영등포구 당산동 일대 아파트값 상승세 두드러짐.",
+          "pubDate": "2025-12-01",
+          "source": "이투데이",
+          "relevance": "간접 언급 - 지역 시세 상승"
+        },
+        {
+          "title": "10·15 규제 효과…15억 수렴의 법칙",
+          "link": "https://n.news.naver.com/mnews/article/374/0000479067?sid=101",
+          "description": "서울 영등포구 당산동에 500여 세대 아파트, 전용 73㎡가 규제 이후 1억6500만원 상승한 13억9500만원에 거래.",
+          "pubDate": "2025-12-05",
+          "source": "SBS Biz",
+          "relevance": "간접 언급 - 당산동 가격 상승"
+        }
+      ]
+    },
+    "당산삼성래미안": {
+      "region": "당산동",
+      "total_news": 2242,
+      "relevance_score": "medium",
+      "news_count": 4,
+      "summary": "당산삼성래미안4차 전용 115㎡ 22억9천만원 거래. KCC 재도장 수주로 외관 리뉴얼. 당산현대5차 14억8000만원 거래 등 당산동 전반 상승세.",
+      "items": [
+        {
+          "title": "[아파트값 상승 톱10] 서울 영등포구 '당산삼성2차' 등",
+          "link": "https://www.etoday.co.kr/news/view/2525497",
+          "description": "영등포구 '당산삼성2차' 등이 전국 아파트값 상승 상위 10위권에 올랐다.",
+          "pubDate": "2025-11-14",
+          "source": "이투데이",
+          "relevance": "직접 언급 - 가격 상승 상위"
+        },
+        {
+          "title": "[아파트값 상승 톱10] 서울 성동구 '갤러리아포레' 등",
+          "link": "https://www.etoday.co.kr/news/view/2512628",
+          "description": "영등포구 '당산삼성래미안4차' 등이 실거래가 상승 리스트에 올랐다.",
+          "pubDate": "2025-10-02",
+          "source": "이투데이",
+          "relevance": "직접 언급 - 실거래가 상승"
+        },
+        {
+          "title": "KCC, '숲으로' 앞세워 공동주택 재도장시장 공략",
+          "link": "https://www.dnews.co.kr/uhtml/view.jsp?idxno=202509081240030780672",
+          "description": "부산 SK뷰, 당산 삼성 래미안 등 지역 랜드마크급 대형 단지에 숲으로 도장 공급.",
+          "pubDate": "2025-09-22",
+          "source": "대한경제",
+          "relevance": "직접 언급 - 재도장 수주"
+        },
+        {
+          "title": "[주간 부동산] 영등포구 여의도동 광장 아파트 35억",
+          "link": "http://www.newsbrite.net/news/articleView.html?idxno=192976",
+          "description": "당산삼성래미안4차 전용면적 115.78㎡ 매물은 22억9천만원에 매매됐다.",
+          "pubDate": "2025-08-29",
+          "source": "뉴스브라이트",
+          "relevance": "직접 언급 - 실거래가 정보"
+        }
+      ]
+    },
+    "아크로타워스퀘어": {
+      "region": "영등포동",
+      "total_news": 1740,
+      "relevance_score": "high",
+      "news_count": 5,
+      "summary": "영등포뉴타운 대장주. 전용 84㎡ 18억4000만원 거래로 전년 대비 2억3000만원 상승. 월세 59.7㎡ 보증금 2억, 월세 220만원 계약. 뉴타운 수혜 분양단지로 주목.",
+      "items": [
+        {
+          "title": "[위클리오늘]영등포구 월세 실거래가 TOP 10",
+          "link": "http://www.weeklytoday.com/news/articleView.html?idxno=736177",
+          "description": "영등포동7가 아크로타워스퀘어 59.7㎡ 28층 매물이 보증금 2억원, 월세 220만원에 거래.",
+          "pubDate": "2025-11-05",
+          "source": "위클리오늘",
+          "relevance": "직접 언급 - 월세 거래"
+        },
+        {
+          "title": "뉴타운, 재개발 '상전벽해' 수혜 유망 분양단지 어디?",
+          "link": "https://www.viva100.com/article/20251027501052",
+          "description": "영등포뉴타운의 '아크로타워스퀘어' 전용 84㎡는 올해 9월 18억4000만원(16층)에 거래되며 1년 새 약 2억3000만원 상승.",
+          "pubDate": "2025-10-27",
+          "source": "브릿지경제",
+          "relevance": "직접 언급 - 가격 상승폭"
+        },
+        {
+          "title": "올 하반기 뉴타운·재개발 수혜 분양단지 어디?",
+          "link": "http://www.fntimes.com/html/view.php?ud=202510240947548368e6bc284286_18",
+          "description": "영등포뉴타운에 속해 있는 '아크로타워스퀘어' 전용 84㎡ 올해 9월 실거래가 18억4000만원.",
+          "pubDate": "2025-10-25",
+          "source": "한국금융신문",
+          "relevance": "직접 언급 - 뉴타운 수혜"
+        },
+        {
+          "title": "올 하반기 뉴타운·재개발 '상전벽해' 수혜 유망 분양단지는?",
+          "link": "http://www.lawissue.co.kr/view.php?ud=20251024161430407967191f6c6e_12",
+          "description": "국토부 실거래가에 따르면 영등포뉴타운 '아크로타워스퀘어' 전용 84㎡ 18억4000만원 거래.",
+          "pubDate": "2025-10-24",
+          "source": "로이슈",
+          "relevance": "직접 언급 - 실거래가 확인"
+        },
+        {
+          "title": "수도권 대규모 정비사업 단지 '상전벽해'…뉴타운·재개발 단지 매력 부각",
+          "link": "https://www.smarttoday.co.kr/news/articleView.html?idxno=94329",
+          "description": "영등포뉴타운의 '아크로타워스퀘어' 전용 84㎡ 18억4000만원으로 지난해 대비 2억3000만원 상승.",
+          "pubDate": "2025-10-24",
+          "source": "스마트투데이",
+          "relevance": "직접 언급 - 정비사업 수혜"
+        }
+      ]
+    },
+    "영등포푸르지오": {
+      "region": "영등포동",
+      "total_news": 12455,
+      "relevance_score": "high",
+      "news_count": 4,
+      "summary": "경매 낙찰가 14억50만원으로 매매 최고가 13억9500만원 상회. 낙찰가율 113% 기록. 영등포뉴타운 집창촌 정비 수혜 기대.",
+      "items": [
+        {
+          "title": "이주현 '경매, 매매가보다 낮아야 하는데…' 요즘 아파트 경매, 높게 낙찰",
+          "link": "https://n.news.naver.com/mnews/article/057/0001922923?sid=102",
+          "description": "영등포 푸르지오 아파트 역시 113%에 낙찰됐는데, 14억 50만원에 낙찰. 매매 최고가는 13억 9500만원.",
+          "pubDate": "2025-12-04",
+          "source": "MBN",
+          "relevance": "직접 언급 - 경매 낙찰"
+        },
+        {
+          "title": "감정가보다 60% 높아도 덥석…갭투자 가능한 경매시장으로 달려갔다",
+          "link": "https://n.news.naver.com/mnews/article/009/0005600522?sid=101",
+          "description": "'영등포푸르지오' 전용 79㎡ 경매에서 기존 매매 최고가 13억9500만원보다 높은 14억50만원 낙찰.",
+          "pubDate": "2025-12-03",
+          "source": "매일경제",
+          "relevance": "직접 언급 - 신고가 경매"
+        },
+        {
+          "title": "'집창촌' 꼬리표 뗀 천호·청량리·미아리·용산…영등포는 '아직'",
+          "link": "https://n.news.naver.com/mnews/article/018/0006178652?sid=101",
+          "description": "영등포역 일대 집결지 정비 진행 중. 영등포푸르지오 등 인근 아파트 수혜 기대.",
+          "pubDate": "2025-12-06",
+          "source": "이데일리",
+          "relevance": "간접 언급 - 지역 정비 수혜"
+        },
+        {
+          "title": "[아파트값 상승 톱10] 서울 서초구 '래미안퍼스티지' 등",
+          "link": "https://www.etoday.co.kr/news/view/2531101",
+          "description": "서울 영등포구 '당산푸르지오' 등이 전국 아파트값 상승 상위권에 올랐다.",
+          "pubDate": "2025-12-01",
+          "source": "이투데이",
+          "relevance": "간접 언급 - 영등포 푸르지오 계열"
+        }
+      ]
+    },
+    "광명자이더샵포레나": {
+      "region": "광명동",
+      "total_news": 1931,
+      "relevance_score": "very_high",
+      "news_count": 6,
+      "summary": "광명제1R구역 재개발 단지. 2025년 12월 준공 앞두고 4차 품질점검 완료. 박승원 광명시장 직접 현장 방문. 통학구역 조정 이슈(광명동초·광명북초)로 학부모 관심 집중.",
+      "items": [
+        {
+          "title": "30여 브랜드 참여하는 '2025 광명가구거리 가구세일페스타' 내일 마무리",
+          "link": "https://www.getnews.co.kr/news/articleView.html?idxno=852308",
+          "description": "광명 센트럴 아이파크, 광명 자이 더샵 포레나 입주민을 위한 맞춤 프로모션 마련.",
+          "pubDate": "2025-12-06",
+          "source": "글로벌경제신문",
+          "relevance": "직접 언급 - 입주 프로모션"
+        },
+        {
+          "title": "[현장in] 광명 '위험한 통학로' 갈등…교육청, 통학구역 '부분조정'",
+          "link": "https://n.news.naver.com/mnews/article/001/0015778986?sid=102",
+          "description": "입주를 앞둔 광명자이더샵포레나(1~3단지) 아이들 통학 관련. 1단지는 광명동초·광명북초 비슷 거리, 2·3단지는 광명북초가 더 가까움.",
+          "pubDate": "2025-12-04",
+          "source": "연합뉴스",
+          "relevance": "직접 언급 - 통학구역 조정"
+        },
+        {
+          "title": "박승원 시장, 광명 제1R 재개발정비사업 준공 현장 품질점검",
+          "link": "https://www.thereport.co.kr/news/articleView.html?idxno=75531",
+          "description": "박승원 광명시장이 준공을 앞둔 광명제1R구역 '광명자이더샵포레나' 현장에서 4차 준공 품질 점검.",
+          "pubDate": "2025-12-04",
+          "source": "더리포트",
+          "relevance": "직접 언급 - 준공 품질점검"
+        },
+        {
+          "title": "박승원 광명시장, 광명제1R 재개발 구역 방문...'입주민이 안심할 때까지'",
+          "link": "http://www.hansbiz.co.kr/news/articleView.html?idxno=797209",
+          "description": "박승원 광명시장 광명제1R구역 '광명자이더샵포레나' 방문, 입주 예정자들과 함께 4차 품질 점검 진행.",
+          "pubDate": "2025-12-03",
+          "source": "한스경제",
+          "relevance": "직접 언급 - 시장 현장 방문"
+        },
+        {
+          "title": "박승원 광명시장, 광명자이더샵포레나 준공 현장 품질 점검",
+          "link": "https://weekly.hankooki.com/news/articleView.html?idxno=7139748",
+          "description": "광명제1R구역 재개발정비사업 '광명자이더샵포레나' 입주 전 건축 마감, 안전, 생활편의 등 점검.",
+          "pubDate": "2025-12-03",
+          "source": "위클리한국",
+          "relevance": "직접 언급 - 품질점검 상세"
+        },
+        {
+          "title": "[분양 캘린더] 12월 둘째 주 '창원센트럴아이파크' 등 1만2가구 분양",
+          "link": "https://www.etoday.co.kr/news/view/2533253",
+          "description": "서울 '역삼센트럴자이', 경기 오산 '북오산자이리버블시티', 부산 '한화포레나부산대연' 등 분양 예정.",
+          "pubDate": "2025-12-06",
+          "source": "이투데이",
+          "relevance": "간접 언급 - 자이/더샵/포레나 브랜드"
+        }
+      ]
+    },
+    "광명아크포레자이위브": {
+      "region": "광명동",
+      "total_news": 429,
+      "relevance_score": "high",
+      "news_count": 5,
+      "summary": "광명뉴타운 첫 분양 단지(2017년). 전용 59㎡ 9억원 신고가 기록(10·15 이후). 32㎡ 공공임대 입주자 모집 중. 분양가 1770만원→현재 대비 2배 상승.",
+      "items": [
+        {
+          "title": "쏟아지는 신축 물량, 지금이 기회? 광명뉴타운",
+          "link": "https://woman.donga.com/3/all/12/5991760/1",
+          "description": "광명시 아파트 평균 가격 7억7000만원. 2017년 분양가 3.3㎡당 1770만원(광명아크포레자이위브)에서 3366만원(트리우스광명)으로 2배 상승.",
+          "pubDate": "2025-12-03",
+          "source": "여성동아",
+          "relevance": "직접 언급 - 분양가 비교 기준"
+        },
+        {
+          "title": "광명도시공사, '광명제16R구역 재개발 공공매입 임대주택' 입주자 모집",
+          "link": "http://www.enewstoday.co.kr/news/articleView.html?idxno=2359486",
+          "description": "광명동 새터로 44-8 공공임대주택(광명아크포레자이위브 1209동) 32㎡형 24가구 입주자 모집.",
+          "pubDate": "2025-11-24",
+          "source": "이뉴스투데이",
+          "relevance": "직접 언급 - 공공임대 모집"
+        },
+        {
+          "title": "서울 이어 수도권도 '규제 약발' 끝났나…3연타 대책, 시장내성만 키워",
+          "link": "https://biz.newdaily.co.kr/site/data/html/2025/11/24/2025112400105.html",
+          "description": "광명시 광명동 '아크포레자이위브' 전용 59㎡ 지난 7일 이전최고가 대비 1000만원 오른 9억원에 거래, 신고가.",
+          "pubDate": "2025-11-24",
+          "source": "뉴데일리",
+          "relevance": "직접 언급 - 신고가 9억원"
+        },
+        {
+          "title": "정비사업 아파트 선점이 핵심… '안양자이 헤리티온' 본격 분양",
+          "link": "https://n.news.naver.com/mnews/article/277/0005683057?sid=101",
+          "description": "광명뉴타운 첫 분양 단지 '광명아크포레자이위브'(2017년) 3.3㎡당 분양가 1774만원. 이후 트리우스광명 3366만원까지 상승.",
+          "pubDate": "2025-11-22",
+          "source": "아시아경제",
+          "relevance": "직접 언급 - 분양가 기준점"
+        },
+        {
+          "title": "박승원 광명시장, '시민 목소리 내년 시정 밑거름으로 삼겠다'",
+          "link": "http://www.paxetv.com/news/articleView.html?idxno=250872",
+          "description": "올해 6월부터 광명아크포레자이위브, 철산래미안자이 등 차례로 방문하며 시민 소통.",
+          "pubDate": "2025-11-03",
+          "source": "팍스티브이",
+          "relevance": "직접 언급 - 시장 방문"
+        }
+      ]
+    },
+    "보라매자이더포레스트": {
+      "region": "신대방동",
+      "total_news": 195,
+      "relevance_score": "high",
+      "news_count": 5,
+      "summary": "2021년 준공 신축. 전용 59㎡ 10월 들어 14억5000만원까지 상승(2억+ 급등). 신대방삼거리역 초역세권. 한강 생활권 프리미엄. 주민 화합 한마음 페스티벌 개최.",
+      "items": [
+        {
+          "title": "'돈 없고 대출도 안되고 10평이라도 가야죠' 李 정부 출범 후, 중소형 급등",
+          "link": "https://n.news.naver.com/mnews/article/016/0002562758?sid=101",
+          "description": "동작구 신대방동 보라매자이더포레스트 59㎡가 9월까지 12~13억원에서 10월 들어 최대 14억5000만원까지 급등.",
+          "pubDate": "2025-11-25",
+          "source": "헤럴드경제",
+          "relevance": "직접 언급 - 10월 이후 급등"
+        },
+        {
+          "title": "8월 서울 아파트값 반등…정비사업·신축 대단지가 주도",
+          "link": "https://www.viva100.com/article/20250923501474",
+          "description": "동작구 '보라매자이더포레스트' 전용 59㎡ 2021년 준공 신축으로 8월 평균 실거래가 13억500만원(전월 대비 8.2% 상승).",
+          "pubDate": "2025-09-23",
+          "source": "브릿지경제",
+          "relevance": "직접 언급 - 가격 상승 주도"
+        },
+        {
+          "title": "'싸게 파느니 가족 준다'…규제 후 서울 증여 급증",
+          "link": "https://n.news.naver.com/mnews/article/029/0002975169?sid=101",
+          "description": "동작구 신대방동 '보라매자이더포레스트' 전용 59㎡ 지난달 31일 9억원(38층)에 직거래.",
+          "pubDate": "2025-08-13",
+          "source": "디지털타임스",
+          "relevance": "직접 언급 - 직거래 동향"
+        },
+        {
+          "title": "'알짜 아파트'에 우르르…대출 규제에 현금 부자들만 신났다",
+          "link": "https://n.news.naver.com/mnews/article/015/0005158006?sid=101",
+          "description": "동작구 '보라매자이더포레스트' 59㎡도 종전 최고가보다 1500만원 높은 13억500만원(11층)에 매매.",
+          "pubDate": "2025-07-15",
+          "source": "한국경제",
+          "relevance": "직접 언급 - 신고가 거래"
+        },
+        {
+          "title": "서울 보라매자이더포레스트 주민 화합 한마음 축제",
+          "link": "https://www.hapt.co.kr/news/articleView.html?idxno=165727",
+          "description": "서울 동작구 보라매자이더포레스트아파트 6월 12일 제4회 주민 화합 한마음 페스티벌 개최, 700여명 참가.",
+          "pubDate": "2025-07-01",
+          "source": "한국아파트신문",
+          "relevance": "직접 언급 - 단지 커뮤니티"
+        }
+      ]
+    },
+    "아크로리버스카이": {
+      "region": "대방동",
+      "total_news": 4723,
+      "relevance_score": "high",
+      "news_count": 5,
+      "summary": "노량진8구역 재개발 단지. DL이앤씨 시공, 309가구 분양 예정(2026년으로 연기). 노량진뉴타운 한강벨트 부촌 개발 수혜. 6구역·2구역 착공으로 지역 가치 상승 기대.",
+      "items": [
+        {
+          "title": "건설사, 내년으로 분양 연기 조짐…대출 규제로 심리 위축되자 '관망'",
+          "link": "https://www.goodkyung.com/news/articleView.html?idxno=278026",
+          "description": "서울 동작구 대방동에 공급되는 '아크로 리버스카이'도 연내 분양 계획했지만 내년으로 연기.",
+          "pubDate": "2025-12-05",
+          "source": "굿모닝경제",
+          "relevance": "직접 언급 - 분양 연기"
+        },
+        {
+          "title": "10·15 후폭풍…서울 '로또 청약' 줄줄이 내년으로 밀렸다",
+          "link": "https://n.news.naver.com/mnews/article/629/0000450070?sid=101",
+          "description": "DL이앤씨가 노량진8구역 재개발 통해 공급하는 서울 동작구 대방동 '아크로 리버스카이'도 내년 분양으로 연기.",
+          "pubDate": "2025-12-04",
+          "source": "더팩트",
+          "relevance": "직접 언급 - 로또 청약 연기"
+        },
+        {
+          "title": "6·8구역 이어 2구역도 착공…노량진 고시촌서 '한강벨트 부촌' 대변신",
+          "link": "https://n.news.naver.com/mnews/article/629/0000449136?sid=101",
+          "description": "노량진·대방동 일대 73만8000㎡ 규모 노량진뉴타운. 2003년 서울시 2차 뉴타운지구 지정, 6개 구역 순차 개발.",
+          "pubDate": "2025-12-02",
+          "source": "더팩트",
+          "relevance": "간접 언급 - 지역 개발"
+        },
+        {
+          "title": "연말 밀어내기 2만채… 수도권에 70% 집중",
+          "link": "https://n.news.naver.com/mnews/article/020/0003678553?sid=101",
+          "description": "서울 동작구 대방동 '아크로리버스카이'(309채) 12월 분양 예정.",
+          "pubDate": "2025-12-02",
+          "source": "동아일보",
+          "relevance": "직접 언급 - 분양 예정"
+        },
+        {
+          "title": "'계엄發 분양 가뭄' 1년 내내 지속… 새 정부 잇단 규제도 시장회복 어려워",
+          "link": "https://n.news.naver.com/mnews/article/014/0005443171?sid=101",
+          "description": "동작구 대방동 '아크로리버스카이'도 내년으로 일정이 조정됐다.",
+          "pubDate": "2025-12-02",
+          "source": "파이낸셜뉴스",
+          "relevance": "직접 언급 - 분양 일정 조정"
+        }
+      ]
+    }
+  },
+  "fallback_regions": {
+    "description": "아파트별 뉴스가 부족한 경우 동 단위 뉴스 표시",
+    "regions": ["잠실동", "개포동", "대치동", "반포동", "서초동", "당산동", "여의도동", "영등포동", "광명동", "대방동", "신대방동"]
+  }
+}
