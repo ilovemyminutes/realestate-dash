@@ -3,6 +3,7 @@
 - 동별 월간 매매/전세 거래량 추이
 - 동별 총 세대수 (공급 규모)
 - 신규 입주 예정 단지
+- 거래량 vs 전세가율 관계 분석
 """
 
 import plotly.express as px
@@ -103,6 +104,62 @@ def load_upcoming_supply():
     return client.query(query).to_dataframe()
 
 
+@st.cache_data(ttl=3600)
+def load_volume_vs_jeonse_rate():
+    """동별 거래량과 전세가율 관계 데이터"""
+    client = get_bq_client()
+    query = f"""
+    WITH maemae_trades AS (
+        SELECT
+            region,
+            COUNT(*) as maemae_count,
+            AVG(price) as avg_maemae
+        FROM `{TABLE_MAEMAE}`
+        WHERE price IS NOT NULL
+          AND date >= CAST(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH) AS STRING)
+          AND {FILTER_EXCLUDE_JUSANGBOKHAP}
+        GROUP BY region
+    ),
+    jeonsae_trades AS (
+        SELECT
+            region,
+            COUNT(*) as jeonsae_count,
+            AVG(price) as avg_jeonsae
+        FROM `{TABLE_JEONSAE}`
+        WHERE price IS NOT NULL
+          AND date >= CAST(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH) AS STRING)
+          AND {FILTER_EXCLUDE_JUSANGBOKHAP}
+        GROUP BY region
+    ),
+    complex_stats AS (
+        SELECT
+            region,
+            SUM(total_households) as total_households,
+            AVG(building_age) as avg_building_age
+        FROM `{TABLE_COMPLEX}`
+        WHERE {FILTER_EXCLUDE_JUSANGBOKHAP}
+          AND total_households IS NOT NULL
+        GROUP BY region
+    )
+    SELECT
+        m.region,
+        m.maemae_count,
+        j.jeonsae_count,
+        (m.maemae_count + j.jeonsae_count) as total_trades,
+        ROUND(j.avg_jeonsae / NULLIF(m.avg_maemae, 0) * 100, 1) as jeonse_rate,
+        ROUND(m.avg_maemae / 10000, 1) as avg_maemae_억,
+        ROUND(j.avg_jeonsae / 10000, 1) as avg_jeonsae_억,
+        c.total_households,
+        ROUND(c.avg_building_age, 1) as avg_building_age
+    FROM maemae_trades m
+    JOIN jeonsae_trades j ON m.region = j.region
+    LEFT JOIN complex_stats c ON m.region = c.region
+    WHERE m.avg_maemae > 0
+    ORDER BY total_trades DESC
+    """
+    return client.query(query).to_dataframe()
+
+
 # --- 차트 함수 ---
 def create_trade_volume_chart(df, selected_regions):
     """동별 거래량 추이 차트"""
@@ -186,7 +243,7 @@ def create_new_old_ratio_chart(df):
 
 
 # --- 메인 UI ---
-tab1, tab2, tab3 = st.tabs(["📈 거래량 추이", "🏠 공급 규모", "🆕 신규 입주 예정"])
+tab1, tab2, tab3, tab4 = st.tabs(["📈 거래량 추이", "🔗 거래량 vs 전세가율", "🏠 공급 규모", "🆕 신규 입주 예정"])
 
 # --- Tab 1: 거래량 추이 ---
 with tab1:
@@ -255,8 +312,130 @@ with tab1:
     except Exception as e:
         st.error(f"데이터 로딩 오류: {e}")
 
-# --- Tab 2: 공급 규모 ---
+# --- Tab 2: 거래량 vs 전세가율 ---
 with tab2:
+    st.markdown("### 🔗 거래량과 전세가율의 관계")
+    st.caption("최근 6개월 데이터 기준 | 원 크기: 총 세대수 | 색상: 평균 연식")
+
+    try:
+        vol_rate_df = load_volume_vs_jeonse_rate()
+
+        if not vol_rate_df.empty:
+            # 필터
+            col1, col2 = st.columns(2)
+            with col1:
+                min_trades = st.slider("최소 거래량", 0, int(vol_rate_df["total_trades"].max()), 10)
+            with col2:
+                rate_range = st.slider("전세가율 범위 (%)", 0, 100, (30, 90))
+
+            filtered = vol_rate_df[
+                (vol_rate_df["total_trades"] >= min_trades)
+                & (vol_rate_df["jeonse_rate"] >= rate_range[0])
+                & (vol_rate_df["jeonse_rate"] <= rate_range[1])
+            ]
+
+            if not filtered.empty:
+                # 산점도: 거래량 vs 전세가율
+                fig_scatter = px.scatter(
+                    filtered,
+                    x="total_trades",
+                    y="jeonse_rate",
+                    size="total_households",
+                    color="avg_building_age",
+                    color_continuous_scale="RdYlGn_r",
+                    hover_name="region",
+                    hover_data={
+                        "maemae_count": True,
+                        "jeonsae_count": True,
+                        "avg_maemae_억": True,
+                        "avg_jeonsae_억": True,
+                        "total_households": True,
+                    },
+                    labels={
+                        "total_trades": "총 거래량 (건)",
+                        "jeonse_rate": "전세가율 (%)",
+                        "avg_building_age": "평균 연식",
+                        "total_households": "총 세대수",
+                    },
+                    title="동별 거래량 vs 전세가율",
+                )
+                fig_scatter.update_layout(height=500)
+
+                # 위험선 추가
+                fig_scatter.add_hline(
+                    y=70, line_dash="dash", line_color="#FFA726", line_width=1, annotation_text="⚠️ 70%"
+                )
+                fig_scatter.add_hline(
+                    y=80, line_dash="dash", line_color="#EF5350", line_width=1, annotation_text="🚨 80%"
+                )
+
+                st.plotly_chart(fig_scatter, use_container_width=True)
+
+                # 인사이트 분석
+                st.markdown("---")
+                st.markdown("#### 💡 인사이트")
+
+                col1, col2 = st.columns(2)
+
+                # 거래량 많고 전세가율 낮은 지역 (활발한 시장 + 안전)
+                with col1:
+                    st.markdown("##### ✅ 활발한 시장 + 안전 지역")
+                    st.caption("거래량 상위 30% & 전세가율 60% 미만")
+                    trade_threshold = filtered["total_trades"].quantile(0.7)
+                    safe_active = filtered[
+                        (filtered["total_trades"] >= trade_threshold) & (filtered["jeonse_rate"] < 60)
+                    ]
+                    if not safe_active.empty:
+                        for _, row in safe_active.head(5).iterrows():
+                            r, t, j = row["region"], row["total_trades"], row["jeonse_rate"]
+                            st.success(f"**{r}** - 거래량: {t}건 | 전세가율: {j}%")
+                    else:
+                        st.info("해당 조건의 지역이 없습니다.")
+
+                # 거래량 적고 전세가율 높은 지역 (침체 + 위험)
+                with col2:
+                    st.markdown("##### ⚠️ 침체 시장 + 위험 지역")
+                    st.caption("거래량 하위 30% & 전세가율 70% 이상")
+                    trade_low = filtered["total_trades"].quantile(0.3)
+                    risky_stale = filtered[(filtered["total_trades"] <= trade_low) & (filtered["jeonse_rate"] >= 70)]
+                    if not risky_stale.empty:
+                        for _, row in risky_stale.head(5).iterrows():
+                            r, t, j = row["region"], row["total_trades"], row["jeonse_rate"]
+                            st.error(f"**{r}** - 거래량: {t}건 | 전세가율: {j}%")
+                    else:
+                        st.success("위험 지역이 없습니다! 👍")
+
+                # 상관관계 분석
+                st.markdown("---")
+                st.markdown("#### 📊 상관관계 분석")
+
+                correlation = filtered["total_trades"].corr(filtered["jeonse_rate"])
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric("거래량-전세가율 상관계수", f"{correlation:.3f}")
+                with col2:
+                    if correlation < -0.3:
+                        st.info("📉 음의 상관: 거래 활발할수록 전세가율 낮음")
+                    elif correlation > 0.3:
+                        st.warning("📈 양의 상관: 거래 활발할수록 전세가율 높음")
+                    else:
+                        st.success("➡️ 약한 상관: 거래량과 전세가율은 독립적")
+                with col3:
+                    avg_rate = filtered["jeonse_rate"].mean()
+                    st.metric("평균 전세가율", f"{avg_rate:.1f}%")
+
+            else:
+                st.warning("필터 조건에 맞는 데이터가 없습니다.")
+
+        else:
+            st.warning("데이터가 없습니다.")
+
+    except Exception as e:
+        st.error(f"데이터 로딩 오류: {e}")
+
+# --- Tab 3: 공급 규모 ---
+with tab3:
     st.markdown("### 🏠 동별 공급 규모")
     st.caption("아파트 단지 수 및 총 세대수 기준")
 
@@ -302,8 +481,8 @@ with tab2:
     except Exception as e:
         st.error(f"데이터 로딩 오류: {e}")
 
-# --- Tab 3: 신규 입주 예정 ---
-with tab3:
+# --- Tab 4: 신규 입주 예정 ---
+with tab4:
     st.markdown("### 🆕 신규 입주 예정 단지")
     st.caption("building_age < 0인 미준공/분양권 단지")
 
