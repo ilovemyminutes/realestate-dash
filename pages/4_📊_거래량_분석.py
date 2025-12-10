@@ -146,7 +146,7 @@ def load_volume_vs_jeonse_rate():
         m.region,
         m.maemae_count,
         j.jeonsae_count,
-        (m.maemae_count + j.jeonsae_count) as total_trades,
+        m.maemae_count as maemae_trades,
         ROUND(j.avg_jeonsae / NULLIF(m.avg_maemae, 0) * 100, 1) as jeonse_rate,
         ROUND(m.avg_maemae / 10000, 1) as avg_maemae_eok,
         ROUND(j.avg_jeonsae / 10000, 1) as avg_jeonsae_eok,
@@ -156,7 +156,7 @@ def load_volume_vs_jeonse_rate():
     JOIN jeonsae_trades j ON m.region = j.region
     LEFT JOIN complex_stats c ON m.region = c.region
     WHERE m.avg_maemae > 0
-    ORDER BY total_trades DESC
+    ORDER BY maemae_trades DESC
     """
     return client.query(query).to_dataframe()
 
@@ -325,12 +325,12 @@ with tab2:
             # 필터
             col1, col2 = st.columns(2)
             with col1:
-                min_trades = st.slider("최소 거래량", 0, int(vol_rate_df["total_trades"].max()), 10)
+                min_trades = st.slider("최소 매매 거래량", 0, int(vol_rate_df["maemae_trades"].max()), 10)
             with col2:
                 rate_range = st.slider("전세가율 범위 (%)", 0, 100, (30, 90))
 
             filtered = vol_rate_df[
-                (vol_rate_df["total_trades"] >= min_trades)
+                (vol_rate_df["maemae_trades"] >= min_trades)
                 & (vol_rate_df["jeonse_rate"] >= rate_range[0])
                 & (vol_rate_df["jeonse_rate"] <= rate_range[1])
             ]
@@ -339,7 +339,7 @@ with tab2:
                 # 산점도: 거래량 vs 전세가율
                 fig_scatter = px.scatter(
                     filtered,
-                    x="total_trades",
+                    x="maemae_trades",
                     y="jeonse_rate",
                     size="total_households",
                     color="avg_building_age",
@@ -353,12 +353,12 @@ with tab2:
                         "total_households": True,
                     },
                     labels={
-                        "total_trades": "총 거래량 (건)",
+                        "maemae_trades": "매매 거래량 (건)",
                         "jeonse_rate": "전세가율 (%)",
                         "avg_building_age": "평균 연식",
                         "total_households": "총 세대수",
                     },
-                    title="동별 거래량 vs 전세가율",
+                    title="동별 매매 거래량 vs 전세가율",
                 )
                 fig_scatter.update_layout(height=500)
 
@@ -381,14 +381,14 @@ with tab2:
                 # 거래량 많고 전세가율 낮은 지역 (활발한 시장 + 안전)
                 with col1:
                     st.markdown("##### ✅ 활발한 시장 + 안전 지역")
-                    st.caption("거래량 상위 30% & 전세가율 60% 미만")
-                    trade_threshold = filtered["total_trades"].quantile(0.7)
+                    st.caption("매매 거래량 상위 30% & 전세가율 60% 미만")
+                    trade_threshold = filtered["maemae_trades"].quantile(0.7)
                     safe_active = filtered[
-                        (filtered["total_trades"] >= trade_threshold) & (filtered["jeonse_rate"] < 60)
+                        (filtered["maemae_trades"] >= trade_threshold) & (filtered["jeonse_rate"] < 60)
                     ]
                     if not safe_active.empty:
                         for _, row in safe_active.head(5).iterrows():
-                            r, t, j = row["region"], row["total_trades"], row["jeonse_rate"]
+                            r, t, j = row["region"], row["maemae_trades"], row["jeonse_rate"]
                             st.success(f"**{r}** - 거래량: {t}건 | 전세가율: {j}%")
                     else:
                         st.info("해당 조건의 지역이 없습니다.")
@@ -396,12 +396,12 @@ with tab2:
                 # 거래량 적고 전세가율 높은 지역 (침체 + 위험)
                 with col2:
                     st.markdown("##### ⚠️ 침체 시장 + 위험 지역")
-                    st.caption("거래량 하위 30% & 전세가율 70% 이상")
-                    trade_low = filtered["total_trades"].quantile(0.3)
-                    risky_stale = filtered[(filtered["total_trades"] <= trade_low) & (filtered["jeonse_rate"] >= 70)]
+                    st.caption("매매 거래량 하위 30% & 전세가율 70% 이상")
+                    trade_low = filtered["maemae_trades"].quantile(0.3)
+                    risky_stale = filtered[(filtered["maemae_trades"] <= trade_low) & (filtered["jeonse_rate"] >= 70)]
                     if not risky_stale.empty:
                         for _, row in risky_stale.head(5).iterrows():
-                            r, t, j = row["region"], row["total_trades"], row["jeonse_rate"]
+                            r, t, j = row["region"], row["maemae_trades"], row["jeonse_rate"]
                             st.error(f"**{r}** - 거래량: {t}건 | 전세가율: {j}%")
                     else:
                         st.success("위험 지역이 없습니다! 👍")
@@ -410,20 +410,20 @@ with tab2:
                 st.markdown("---")
                 st.markdown("#### 📊 상관관계 분석")
 
-                corr_trade = filtered["total_trades"].corr(filtered["jeonse_rate"])
+                corr_trade = filtered["maemae_trades"].corr(filtered["jeonse_rate"])
                 corr_price = filtered["avg_maemae_eok"].corr(filtered["jeonse_rate"])
 
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.markdown("##### 거래량 vs 전세가율")
+                    st.markdown("##### 매매 거래량 vs 전세가율")
                     st.metric("상관계수", f"{corr_trade:.3f}")
                     if corr_trade < -0.3:
-                        st.info("📉 거래 활발할수록 전세가율 낮음")
+                        st.info("📉 매매 활발할수록 전세가율 낮음")
                     elif corr_trade > 0.3:
-                        st.warning("📈 거래 활발할수록 전세가율 높음")
+                        st.warning("📈 매매 활발할수록 전세가율 높음")
                     else:
-                        st.success("➡️ 거래량과 전세가율은 독립적")
+                        st.success("➡️ 매매 거래량과 전세가율은 독립적")
 
                 with col2:
                     st.markdown("##### 매매가 vs 전세가율")
@@ -443,12 +443,12 @@ with tab2:
                     filtered,
                     x="avg_maemae_eok",
                     y="jeonse_rate",
-                    size="total_trades",
+                    size="maemae_trades",
                     color="avg_building_age",
                     color_continuous_scale="RdYlGn_r",
                     hover_name="region",
                     hover_data={
-                        "total_trades": True,
+                        "maemae_trades": True,
                         "avg_jeonsae_eok": True,
                         "total_households": True,
                     },
@@ -456,9 +456,9 @@ with tab2:
                         "avg_maemae_eok": "평균 매매가 (억)",
                         "jeonse_rate": "전세가율 (%)",
                         "avg_building_age": "평균 연식",
-                        "total_trades": "거래량",
+                        "maemae_trades": "매매 거래량",
                     },
-                    title="동별 매매가 vs 전세가율 (원 크기: 거래량)",
+                    title="동별 매매가 vs 전세가율 (원 크기: 매매 거래량)",
                 )
                 fig_price.update_layout(height=400)
                 fig_price.add_hline(y=70, line_dash="dash", line_color="#FFA726", line_width=1, annotation_text="⚠️ 70%")
@@ -498,8 +498,8 @@ with tab2:
 
                 # 매매가 구간별 상관관계 분석
                 st.markdown("---")
-                st.markdown("#### 📈 매매가 구간별 거래량-전세가율 상관관계")
-                st.caption("각 가격대에서 거래량과 전세가율의 관계가 어떻게 다른지 분석")
+                st.markdown("#### 📈 매매가 구간별 매매거래량-전세가율 상관관계")
+                st.caption("각 가격대에서 매매 거래량과 전세가율의 관계가 어떻게 다른지 분석")
 
                 # 가격 구간 정의
                 price_segments = [
@@ -514,9 +514,9 @@ with tab2:
                 for label, low, high in price_segments:
                     seg = filtered[(filtered["avg_maemae_eok"] >= low) & (filtered["avg_maemae_eok"] < high)]
                     if len(seg) >= 3:  # 최소 3개 이상일 때만 상관계수 계산
-                        corr = seg["total_trades"].corr(seg["jeonse_rate"])
+                        corr = seg["maemae_trades"].corr(seg["jeonse_rate"])
                         avg_rate = seg["jeonse_rate"].mean()
-                        avg_trades = seg["total_trades"].mean()
+                        avg_trades = seg["maemae_trades"].mean()
                         segment_data.append(
                             {
                                 "구간": label,
@@ -539,7 +539,7 @@ with tab2:
                         color_continuous_scale="RdBu_r",
                         range_color=[-1, 1],
                         text="상관계수",
-                        title="가격 구간별 거래량-전세가율 상관계수",
+                        title="가격 구간별 매매거래량-전세가율 상관계수",
                     )
                     fig_corr.update_traces(texttemplate="%{text:.2f}", textposition="outside")
                     fig_corr.update_layout(height=350)
@@ -598,18 +598,18 @@ with tab2:
                         # 10~15억 구간 산점도
                         fig_10_15 = px.scatter(
                             seg_10_15,
-                            x="total_trades",
+                            x="maemae_trades",
                             y="jeonse_rate",
                             size="total_households",
                             color="avg_building_age",
                             color_continuous_scale="RdYlGn_r",
                             hover_name="region",
                             labels={
-                                "total_trades": "거래량",
+                                "maemae_trades": "매매 거래량",
                                 "jeonse_rate": "전세가율(%)",
                                 "avg_building_age": "평균연식",
                             },
-                            title="10억~15억 구간: 거래량 vs 전세가율",
+                            title="10억~15억 구간: 매매 거래량 vs 전세가율",
                         )
                         fig_10_15.update_layout(height=350)
                         fig_10_15.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
@@ -634,7 +634,7 @@ with tab2:
                     if not new_regions.empty:
                         fig_new = px.scatter(
                             new_regions,
-                            x="total_trades",
+                            x="maemae_trades",
                             y="jeonse_rate",
                             size="total_households",
                             color="jeonse_rate",
@@ -646,7 +646,7 @@ with tab2:
                             range_color=[40, 80],
                             hover_name="region",
                             labels={
-                                "total_trades": "거래량",
+                                "maemae_trades": "매매 거래량",
                                 "jeonse_rate": "전세가율(%)",
                             },
                         )
@@ -660,11 +660,11 @@ with tab2:
                         st.plotly_chart(fig_new, use_container_width=True)
 
                         avg_new = new_regions["jeonse_rate"].mean()
-                        avg_trades_new = new_regions["total_trades"].mean()
+                        avg_trades_new = new_regions["maemae_trades"].mean()
                         st.metric(
                             "평균 전세가율",
                             f"{avg_new:.1f}%",
-                            f"평균 거래량: {avg_trades_new:.0f}건",
+                            f"평균 매매량: {avg_trades_new:.0f}건",
                         )
                     else:
                         st.info("신축 지역 데이터가 없습니다.")
@@ -674,7 +674,7 @@ with tab2:
                     if not old_regions.empty:
                         fig_old = px.scatter(
                             old_regions,
-                            x="total_trades",
+                            x="maemae_trades",
                             y="jeonse_rate",
                             size="total_households",
                             color="jeonse_rate",
@@ -686,7 +686,7 @@ with tab2:
                             range_color=[40, 80],
                             hover_name="region",
                             labels={
-                                "total_trades": "거래량",
+                                "maemae_trades": "매매 거래량",
                                 "jeonse_rate": "전세가율(%)",
                             },
                         )
@@ -700,11 +700,11 @@ with tab2:
                         st.plotly_chart(fig_old, use_container_width=True)
 
                         avg_old = old_regions["jeonse_rate"].mean()
-                        avg_trades_old = old_regions["total_trades"].mean()
+                        avg_trades_old = old_regions["maemae_trades"].mean()
                         st.metric(
                             "평균 전세가율",
                             f"{avg_old:.1f}%",
-                            f"평균 거래량: {avg_trades_old:.0f}건",
+                            f"평균 매매량: {avg_trades_old:.0f}건",
                         )
                     else:
                         st.info("구축 지역 데이터가 없습니다.")
@@ -712,7 +712,7 @@ with tab2:
                 # 신축 vs 구축 비교 요약
                 if not new_regions.empty and not old_regions.empty:
                     diff_rate = new_regions["jeonse_rate"].mean() - old_regions["jeonse_rate"].mean()
-                    diff_trades = new_regions["total_trades"].mean() - old_regions["total_trades"].mean()
+                    diff_trades = new_regions["maemae_trades"].mean() - old_regions["maemae_trades"].mean()
 
                     st.markdown("---")
                     col1, col2 = st.columns(2)
@@ -723,9 +723,9 @@ with tab2:
                             st.info(f"📊 구축이 신축보다 전세가율 **{abs(diff_rate):.1f}%p 높음**")
                     with col2:
                         if diff_trades > 0:
-                            st.info(f"📈 신축이 구축보다 평균 거래량 **{abs(diff_trades):.0f}건 많음**")
+                            st.info(f"📈 신축이 구축보다 평균 매매량 **{abs(diff_trades):.0f}건 많음**")
                         else:
-                            st.info(f"📈 구축이 신축보다 평균 거래량 **{abs(diff_trades):.0f}건 많음**")
+                            st.info(f"📈 구축이 신축보다 평균 매매량 **{abs(diff_trades):.0f}건 많음**")
 
             else:
                 st.warning("필터 조건에 맞는 데이터가 없습니다.")
