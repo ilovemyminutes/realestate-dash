@@ -409,21 +409,91 @@ with tab2:
                 st.markdown("---")
                 st.markdown("#### 📊 상관관계 분석")
 
-                correlation = filtered["total_trades"].corr(filtered["jeonse_rate"])
-                col1, col2, col3 = st.columns(3)
+                corr_trade = filtered["total_trades"].corr(filtered["jeonse_rate"])
+                corr_price = filtered["avg_maemae_eok"].corr(filtered["jeonse_rate"])
+
+                col1, col2 = st.columns(2)
 
                 with col1:
-                    st.metric("거래량-전세가율 상관계수", f"{correlation:.3f}")
-                with col2:
-                    if correlation < -0.3:
-                        st.info("📉 음의 상관: 거래 활발할수록 전세가율 낮음")
-                    elif correlation > 0.3:
-                        st.warning("📈 양의 상관: 거래 활발할수록 전세가율 높음")
+                    st.markdown("##### 거래량 vs 전세가율")
+                    st.metric("상관계수", f"{corr_trade:.3f}")
+                    if corr_trade < -0.3:
+                        st.info("📉 거래 활발할수록 전세가율 낮음")
+                    elif corr_trade > 0.3:
+                        st.warning("📈 거래 활발할수록 전세가율 높음")
                     else:
-                        st.success("➡️ 약한 상관: 거래량과 전세가율은 독립적")
+                        st.success("➡️ 거래량과 전세가율은 독립적")
+
+                with col2:
+                    st.markdown("##### 매매가 vs 전세가율")
+                    st.metric("상관계수", f"{corr_price:.3f}")
+                    if corr_price < -0.3:
+                        st.info("📉 매매가 높을수록 전세가율 낮음 (고가=안전)")
+                    elif corr_price > 0.3:
+                        st.warning("📈 매매가 높을수록 전세가율 높음 (고가=위험)")
+                    else:
+                        st.success("➡️ 매매가와 전세가율은 독립적")
+
+                # 매매가 vs 전세가율 산점도
+                st.markdown("---")
+                st.markdown("#### 💰 매매가 vs 전세가율")
+
+                fig_price = px.scatter(
+                    filtered,
+                    x="avg_maemae_eok",
+                    y="jeonse_rate",
+                    size="total_trades",
+                    color="avg_building_age",
+                    color_continuous_scale="RdYlGn_r",
+                    hover_name="region",
+                    hover_data={
+                        "total_trades": True,
+                        "avg_jeonsae_eok": True,
+                        "total_households": True,
+                    },
+                    labels={
+                        "avg_maemae_eok": "평균 매매가 (억)",
+                        "jeonse_rate": "전세가율 (%)",
+                        "avg_building_age": "평균 연식",
+                        "total_trades": "거래량",
+                    },
+                    title="동별 매매가 vs 전세가율 (원 크기: 거래량)",
+                )
+                fig_price.update_layout(height=400)
+                fig_price.add_hline(y=70, line_dash="dash", line_color="#FFA726", line_width=1, annotation_text="⚠️ 70%")
+                fig_price.add_hline(
+                    y=80, line_dash="dash", line_color="#EF5350", line_width=1, annotation_text="🚨 80%"
+                )
+                st.plotly_chart(fig_price, use_container_width=True)
+
+                # 가격대별 전세가율 분석
+                st.markdown("##### 💡 가격대별 전세가율 분석")
+                col1, col2, col3 = st.columns(3)
+
+                low_price = filtered[filtered["avg_maemae_eok"] < 10]
+                mid_price = filtered[(filtered["avg_maemae_eok"] >= 10) & (filtered["avg_maemae_eok"] < 20)]
+                high_price = filtered[filtered["avg_maemae_eok"] >= 20]
+
+                with col1:
+                    if not low_price.empty:
+                        avg_low = low_price["jeonse_rate"].mean()
+                        st.metric("저가 (10억 미만)", f"{avg_low:.1f}%", f"{len(low_price)}개 동")
+                    else:
+                        st.metric("저가 (10억 미만)", "-", "데이터 없음")
+
+                with col2:
+                    if not mid_price.empty:
+                        avg_mid = mid_price["jeonse_rate"].mean()
+                        st.metric("중가 (10~20억)", f"{avg_mid:.1f}%", f"{len(mid_price)}개 동")
+                    else:
+                        st.metric("중가 (10~20억)", "-", "데이터 없음")
+
                 with col3:
-                    avg_rate = filtered["jeonse_rate"].mean()
-                    st.metric("평균 전세가율", f"{avg_rate:.1f}%")
+                    if not high_price.empty:
+                        avg_high = high_price["jeonse_rate"].mean()
+                        st.metric("고가 (20억 이상)", f"{avg_high:.1f}%", f"{len(high_price)}개 동")
+                    else:
+                        st.metric("고가 (20억 이상)", "-", "데이터 없음")
 
                 # 신축/구축 분리 차트
                 st.markdown("---")
