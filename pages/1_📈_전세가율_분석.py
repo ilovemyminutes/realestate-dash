@@ -351,6 +351,8 @@ with tab2:
             # 전체 리스트
             with st.expander(f"📋 전체 목록 ({len(filtered_df)}건)"):
                 display_df = filtered_df.copy()
+                # 불필요한 컬럼 제거
+                display_df = display_df.drop(columns=["maemae_count", "jeonsae_count"], errors="ignore")
                 display_df["avg_maemae"] = display_df["avg_maemae"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df["gap"] = display_df["gap"].apply(lambda x: f"{x/10000:.1f}억")
