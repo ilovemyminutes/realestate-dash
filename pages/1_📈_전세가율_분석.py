@@ -118,6 +118,13 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
     # 데이터 정렬 (전세가율 오름차순 - 낮은 게 아래로)
     sorted_df = df.sort_values("jeonse_rate", ascending=True).copy()
 
+    # 커스텀 색상 스케일 (채도 낮은 버전)
+    custom_colorscale = [
+        [0, "#64B5F6"],  # 연한 파랑 (하늘색 계열)
+        [0.5, "#B0BEC5"],  # 중간 회색
+        [1, "#E57373"],  # 연한 빨강 (코랄 계열)
+    ]
+
     # Plotly 바 차트
     fig = px.bar(
         sorted_df,
@@ -125,7 +132,7 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
         y="region",
         orientation="h",
         color="jeonse_rate",
-        color_continuous_scale="Bluered",  # 파랑(안전) → 빨강(위험)
+        color_continuous_scale=custom_colorscale,
         range_color=[20, 75],
         labels={"jeonse_rate": "전세가율(%)", "region": "지역(동)"},
         hover_data={
@@ -168,14 +175,21 @@ def create_apartment_scatter_chart(df: pd.DataFrame):
     df_copy["gap_억"] = df_copy["gap"] / 10000
     df_copy["avg_maemae_억"] = df_copy["avg_maemae"] / 10000
 
+    # 커스텀 색상 스케일 (채도 낮은 버전)
+    custom_colorscale = [
+        [0, "#64B5F6"],  # 연한 파랑 (하늘색 계열)
+        [0.5, "#B0BEC5"],  # 중간 회색
+        [1, "#E57373"],  # 연한 빨강 (코랄 계열)
+    ]
+
     fig = px.scatter(
         df_copy,
         x="avg_maemae_억",
         y="jeonse_rate",
         size="gap_억",
         color="jeonse_rate",
-        color_continuous_scale="Bluered",  # 파랑(안전) → 빨강(위험)
-        range_color=[40, 85],
+        color_continuous_scale=custom_colorscale,
+        range_color=[40, 80],
         hover_name="apartment_name",
         hover_data={
             "region": True,
