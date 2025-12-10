@@ -11,6 +11,7 @@ import streamlit as st
 
 from utils.bq_client import (
     FILTER_EXCLUDE_JUSANGBOKHAP,
+    TABLE_COMPLEX,
     TABLE_JEONSAE,
     TABLE_MAEMAE,
     get_bq_client,
@@ -26,7 +27,7 @@ st.markdown("---")
 # --- 데이터 로딩 ---
 @st.cache_data(ttl=3600)
 def load_jeonse_rate_by_region():
-    """아파트별 전세가율 데이터 (최근 6개월, 충분한 거래 이력 있는 아파트만)"""
+    """아파트별 전세가율 데이터 (최근 6개월, 충분한 거래 이력 있는 아파트만, 건축연도 포함)"""
     client = get_bq_client()
     query = f"""
     WITH maemae_avg AS (
@@ -56,6 +57,14 @@ def load_jeonse_rate_by_region():
           AND {FILTER_EXCLUDE_JUSANGBOKHAP}
         GROUP BY region, apartment_name, area_type
         HAVING COUNT(*) >= 2  -- 최소 2건 이상 전세 이력
+    ),
+    complex_info AS (
+        SELECT DISTINCT
+            apartment_name,
+            building_age,
+            construction_year
+        FROM `{TABLE_COMPLEX}`
+        WHERE {FILTER_EXCLUDE_JUSANGBOKHAP}
     )
     SELECT
         m.region,
@@ -66,12 +75,20 @@ def load_jeonse_rate_by_region():
         ROUND(m.avg_maemae - j.avg_jeonsae) as gap,
         ROUND(j.avg_jeonsae / m.avg_maemae * 100, 1) as jeonse_rate,
         m.maemae_count,
-        j.jeonsae_count
+        j.jeonsae_count,
+        COALESCE(c.building_age, 0) as building_age,
+        c.construction_year,
+        CASE
+            WHEN COALESCE(c.building_age, 0) <= 10 THEN '신축'
+            ELSE '구축'
+        END as age_category
     FROM maemae_avg m
     JOIN jeonsae_avg j
         ON m.region = j.region
         AND m.apartment_name = j.apartment_name
         AND m.area_type = j.area_type
+    LEFT JOIN complex_info c
+        ON m.apartment_name = c.apartment_name
     WHERE m.avg_maemae > 0
     ORDER BY jeonse_rate DESC
     """
@@ -315,6 +332,83 @@ with tab2:
                 scatter_fig = create_apartment_scatter_chart(filtered_df)
                 st.plotly_chart(scatter_fig, use_container_width=True)
 
+                # 구축/신축 분리 차트
+                st.markdown("### 🏗️ 구축 vs 신축 전세가율 비교")
+                st.caption("신축: 10년 이하 | 구축: 10년 초과")
+
+                col_new, col_old = st.columns(2)
+
+                new_df = filtered_df[filtered_df["age_category"] == "신축"]
+                old_df = filtered_df[filtered_df["age_category"] == "구축"]
+
+                with col_new:
+                    st.markdown("#### 🆕 신축 아파트")
+                    if not new_df.empty:
+                        avg_new = new_df["jeonse_rate"].mean()
+                        st.metric("평균 전세가율", f"{avg_new:.1f}%", f"{len(new_df)}건")
+
+                        # 신축 산점도
+                        fig_new = px.scatter(
+                            new_df,
+                            x=new_df["avg_maemae"] / 10000,
+                            y="jeonse_rate",
+                            size=new_df["gap"] / 10000,
+                            color="jeonse_rate",
+                            color_continuous_scale=[[0, "#4CAF50"], [0.5, "#FFB74D"], [1, "#E57373"]],
+                            range_color=[40, 80],
+                            hover_name="apartment_name",
+                            hover_data={"region": True, "building_age": True},
+                            labels={"x": "매매가(억)", "jeonse_rate": "전세가율(%)"},
+                        )
+                        fig_new.update_layout(
+                            height=300,
+                            showlegend=False,
+                            coloraxis_showscale=False,
+                            title="신축 전세가율 분포",
+                        )
+                        fig_new.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
+                        st.plotly_chart(fig_new, use_container_width=True)
+                    else:
+                        st.info("신축 아파트 데이터가 없습니다.")
+
+                with col_old:
+                    st.markdown("#### 🏚️ 구축 아파트")
+                    if not old_df.empty:
+                        avg_old = old_df["jeonse_rate"].mean()
+                        st.metric("평균 전세가율", f"{avg_old:.1f}%", f"{len(old_df)}건")
+
+                        # 구축 산점도
+                        fig_old = px.scatter(
+                            old_df,
+                            x=old_df["avg_maemae"] / 10000,
+                            y="jeonse_rate",
+                            size=old_df["gap"] / 10000,
+                            color="jeonse_rate",
+                            color_continuous_scale=[[0, "#4CAF50"], [0.5, "#FFB74D"], [1, "#E57373"]],
+                            range_color=[40, 80],
+                            hover_name="apartment_name",
+                            hover_data={"region": True, "building_age": True},
+                            labels={"x": "매매가(억)", "jeonse_rate": "전세가율(%)"},
+                        )
+                        fig_old.update_layout(
+                            height=300,
+                            showlegend=False,
+                            coloraxis_showscale=False,
+                            title="구축 전세가율 분포",
+                        )
+                        fig_old.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
+                        st.plotly_chart(fig_old, use_container_width=True)
+                    else:
+                        st.info("구축 아파트 데이터가 없습니다.")
+
+                # 구축/신축 비교 요약
+                if not new_df.empty and not old_df.empty:
+                    diff = new_df["jeonse_rate"].mean() - old_df["jeonse_rate"].mean()
+                    if diff > 0:
+                        st.info(f"📊 신축이 구축보다 평균 전세가율이 **{abs(diff):.1f}%p 높습니다**")
+                    else:
+                        st.info(f"📊 구축이 신축보다 평균 전세가율이 **{abs(diff):.1f}%p 높습니다**")
+
             # 위험군 분류
             col1, col2 = st.columns(2)
 
@@ -352,7 +446,10 @@ with tab2:
             with st.expander(f"📋 전체 목록 ({len(filtered_df)}건)"):
                 display_df = filtered_df.copy()
                 # 불필요한 컬럼 제거
-                display_df = display_df.drop(columns=["maemae_count", "jeonsae_count"], errors="ignore")
+                display_df = display_df.drop(
+                    columns=["maemae_count", "jeonsae_count", "building_age", "construction_year", "age_category"],
+                    errors="ignore",
+                )
                 display_df["avg_maemae"] = display_df["avg_maemae"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df["avg_jeonsae"] = display_df["avg_jeonsae"].apply(lambda x: f"{x/10000:.1f}억")
                 display_df["gap"] = display_df["gap"].apply(lambda x: f"{x/10000:.1f}억")
