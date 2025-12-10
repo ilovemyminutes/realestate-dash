@@ -113,26 +113,21 @@ def load_jeonse_rate_summary_by_region():
 
 # --- 차트 함수 ---
 def create_jeonse_rate_bar_chart(df: pd.DataFrame):
-    """동별 전세가율 바 차트 (Altair)"""
+    """동별 전세가율 바 차트 (Altair) - 단순화 버전"""
 
-    # 데이터 정렬 (전세가율 오름차순)
-    sorted_df = df.sort_values("jeonse_rate", ascending=False).copy()
-    region_order = sorted_df["region"].tolist()
+    # 데이터 정렬 (전세가율 내림차순 - 높은 게 위로)
+    sorted_df = df.sort_values("jeonse_rate", ascending=True).copy()
 
-    # 기본 바 차트
-    bars = (
+    # 바 차트
+    chart = (
         alt.Chart(sorted_df)
         .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
         .encode(
-            x=alt.X(
-                "jeonse_rate:Q",
-                title="전세가율 (%)",
-                scale=alt.Scale(domain=[0, 100]),
-            ),
-            y=alt.Y("region:N", title="지역(동)", sort=region_order),
+            x=alt.X("jeonse_rate:Q", title="전세가율 (%)", scale=alt.Scale(domain=[0, 100])),
+            y=alt.Y("region:N", title="지역(동)", sort=list(sorted_df["region"])),
             color=alt.Color(
                 "jeonse_rate:Q",
-                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[20, 90]),
+                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[20, 80]),
                 legend=alt.Legend(title="전세가율(%)", orient="right"),
             ),
             tooltip=[
@@ -143,30 +138,11 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
                 alt.Tooltip("gap:Q", title="갭(만원)", format=",.0f"),
             ],
         )
-    )
-
-    # 위험선 70%
-    rule_70 = (
-        alt.Chart(pd.DataFrame({"x": [70]}))
-        .mark_rule(strokeDash=[5, 5], color="#FF6B6B", strokeWidth=2)
-        .encode(x="x:Q")
-    )
-
-    # 위험선 80%
-    rule_80 = (
-        alt.Chart(pd.DataFrame({"x": [80]}))
-        .mark_rule(strokeDash=[5, 5], color="#DC143C", strokeWidth=2)
-        .encode(x="x:Q")
-    )
-
-    # 레이어 결합
-    chart = (
-        alt.layer(bars, rule_70, rule_80)
         .properties(
             title=alt.TitleParams(
                 text="동별 전세가율 현황 (6개월 평균)",
-                subtitle="낮을수록 안전 | 🔴 70% 주의 | 🔴🔴 80% 위험",
-                fontSize=18,
+                subtitle="낮을수록 안전 (녹색) | 높을수록 위험 (빨간색)",
+                fontSize=16,
                 anchor="start",
             ),
             height=max(400, len(sorted_df) * 28),
