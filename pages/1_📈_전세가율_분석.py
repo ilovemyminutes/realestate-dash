@@ -125,8 +125,8 @@ def create_jeonse_rate_bar_chart(df: pd.DataFrame):
         y="region",
         orientation="h",
         color="jeonse_rate",
-        color_continuous_scale="RdYlGn_r",
-        range_color=[20, 80],
+        color_continuous_scale="Bluered",  # 파랑(안전) → 빨강(위험)
+        range_color=[20, 75],
         labels={"jeonse_rate": "전세가율(%)", "region": "지역(동)"},
         hover_data={
             "avg_maemae": ":,.0f",
@@ -174,8 +174,8 @@ def create_apartment_scatter_chart(df: pd.DataFrame):
         y="jeonse_rate",
         size="gap_억",
         color="jeonse_rate",
-        color_continuous_scale="RdYlGn_r",
-        range_color=[40, 90],
+        color_continuous_scale="Bluered",  # 파랑(안전) → 빨강(위험)
+        range_color=[40, 85],
         hover_name="apartment_name",
         hover_data={
             "region": True,
