@@ -6,6 +6,7 @@
 - 거래량 vs 전세가율 관계 분석
 """
 
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -494,6 +495,128 @@ with tab2:
                         st.metric("고가 (20억 이상)", f"{avg_high:.1f}%", f"{len(high_price)}개 동")
                     else:
                         st.metric("고가 (20억 이상)", "-", "데이터 없음")
+
+                # 매매가 구간별 상관관계 분석
+                st.markdown("---")
+                st.markdown("#### 📈 매매가 구간별 거래량-전세가율 상관관계")
+                st.caption("각 가격대에서 거래량과 전세가율의 관계가 어떻게 다른지 분석")
+
+                # 가격 구간 정의
+                price_segments = [
+                    ("5억 미만", 0, 5),
+                    ("5억~10억", 5, 10),
+                    ("10억~15억", 10, 15),
+                    ("15억~20억", 15, 20),
+                    ("20억 이상", 20, 100),
+                ]
+
+                segment_data = []
+                for label, low, high in price_segments:
+                    seg = filtered[(filtered["avg_maemae_eok"] >= low) & (filtered["avg_maemae_eok"] < high)]
+                    if len(seg) >= 3:  # 최소 3개 이상일 때만 상관계수 계산
+                        corr = seg["total_trades"].corr(seg["jeonse_rate"])
+                        avg_rate = seg["jeonse_rate"].mean()
+                        avg_trades = seg["total_trades"].mean()
+                        segment_data.append(
+                            {
+                                "구간": label,
+                                "지역수": len(seg),
+                                "상관계수": corr,
+                                "평균전세가율": avg_rate,
+                                "평균거래량": avg_trades,
+                            }
+                        )
+
+                if segment_data:
+                    seg_df = pd.DataFrame(segment_data)
+
+                    # 상관계수 막대 차트
+                    fig_corr = px.bar(
+                        seg_df,
+                        x="구간",
+                        y="상관계수",
+                        color="상관계수",
+                        color_continuous_scale="RdBu_r",
+                        range_color=[-1, 1],
+                        text="상관계수",
+                        title="가격 구간별 거래량-전세가율 상관계수",
+                    )
+                    fig_corr.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+                    fig_corr.update_layout(height=350)
+                    fig_corr.add_hline(y=0, line_dash="solid", line_color="gray", line_width=1)
+                    st.plotly_chart(fig_corr, use_container_width=True)
+
+                    # 구간별 상세 테이블
+                    col1, col2 = st.columns([2, 3])
+
+                    with col1:
+                        st.markdown("##### 📋 구간별 요약")
+                        display_seg = seg_df.copy()
+                        display_seg["상관계수"] = display_seg["상관계수"].apply(lambda x: f"{x:.3f}")
+                        display_seg["평균전세가율"] = display_seg["평균전세가율"].apply(lambda x: f"{x:.1f}%")
+                        display_seg["평균거래량"] = display_seg["평균거래량"].apply(lambda x: f"{x:.0f}건")
+                        st.dataframe(display_seg, use_container_width=True, hide_index=True)
+
+                    with col2:
+                        st.markdown("##### 💡 해석")
+                        for _, row in seg_df.iterrows():
+                            corr_val = row["상관계수"]
+                            label = row["구간"]
+                            if corr_val < -0.3:
+                                st.success(f"**{label}**: 거래↑ → 전세가율↓ (건강한 시장)")
+                            elif corr_val > 0.3:
+                                st.warning(f"**{label}**: 거래↑ → 전세가율↑ (과열 주의)")
+                            else:
+                                st.info(f"**{label}**: 거래량과 전세가율 독립적")
+
+                    # 10억~15억 구간 심층 분석
+                    seg_10_15 = filtered[(filtered["avg_maemae_eok"] >= 10) & (filtered["avg_maemae_eok"] < 15)]
+                    if len(seg_10_15) >= 3:
+                        st.markdown("---")
+                        st.markdown("##### 🎯 10억~15억 구간 심층 분석")
+                        st.caption("실수요자 핵심 가격대")
+
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric(
+                                "해당 지역 수",
+                                f"{len(seg_10_15)}개",
+                            )
+                        with col2:
+                            st.metric(
+                                "평균 전세가율",
+                                f"{seg_10_15['jeonse_rate'].mean():.1f}%",
+                            )
+                        with col3:
+                            danger_cnt = len(seg_10_15[seg_10_15["jeonse_rate"] >= 70])
+                            st.metric(
+                                "위험 지역 (70%+)",
+                                f"{danger_cnt}개",
+                                f"{danger_cnt/len(seg_10_15)*100:.0f}%" if len(seg_10_15) > 0 else "-",
+                            )
+
+                        # 10~15억 구간 산점도
+                        fig_10_15 = px.scatter(
+                            seg_10_15,
+                            x="total_trades",
+                            y="jeonse_rate",
+                            size="total_households",
+                            color="avg_building_age",
+                            color_continuous_scale="RdYlGn_r",
+                            hover_name="region",
+                            labels={
+                                "total_trades": "거래량",
+                                "jeonse_rate": "전세가율(%)",
+                                "avg_building_age": "평균연식",
+                            },
+                            title="10억~15억 구간: 거래량 vs 전세가율",
+                        )
+                        fig_10_15.update_layout(height=350)
+                        fig_10_15.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
+                        st.plotly_chart(fig_10_15, use_container_width=True)
+
+                else:
+                    st.info("분석에 필요한 충분한 데이터가 없습니다.")
 
                 # 신축/구축 분리 차트
                 st.markdown("---")
