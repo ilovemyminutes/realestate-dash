@@ -26,7 +26,7 @@ st.markdown("---")
 # --- 데이터 로딩 ---
 @st.cache_data(ttl=3600)
 def load_jeonse_rate_by_region():
-    """동별 전세가율 데이터"""
+    """아파트별 전세가율 데이터 (최근 6개월, 충분한 거래 이력 있는 아파트만)"""
     client = get_bq_client()
     query = f"""
     WITH maemae_avg AS (
@@ -34,24 +34,28 @@ def load_jeonse_rate_by_region():
             region,
             apartment_name,
             area_type,
-            AVG(price) as avg_maemae
+            AVG(price) as avg_maemae,
+            COUNT(*) as maemae_count
         FROM `{TABLE_MAEMAE}`
         WHERE price IS NOT NULL
           AND date >= CAST(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH) AS STRING)
           AND {FILTER_EXCLUDE_JUSANGBOKHAP}
         GROUP BY region, apartment_name, area_type
+        HAVING COUNT(*) >= 2  -- 최소 2건 이상 매매 이력
     ),
     jeonsae_avg AS (
         SELECT
             region,
             apartment_name,
             area_type,
-            AVG(price) as avg_jeonsae
+            AVG(price) as avg_jeonsae,
+            COUNT(*) as jeonsae_count
         FROM `{TABLE_JEONSAE}`
         WHERE price IS NOT NULL
           AND date >= CAST(DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH) AS STRING)
           AND {FILTER_EXCLUDE_JUSANGBOKHAP}
         GROUP BY region, apartment_name, area_type
+        HAVING COUNT(*) >= 2  -- 최소 2건 이상 전세 이력
     )
     SELECT
         m.region,
@@ -60,7 +64,9 @@ def load_jeonse_rate_by_region():
         ROUND(m.avg_maemae) as avg_maemae,
         ROUND(j.avg_jeonsae) as avg_jeonsae,
         ROUND(m.avg_maemae - j.avg_jeonsae) as gap,
-        ROUND(j.avg_jeonsae / m.avg_maemae * 100, 1) as jeonse_rate
+        ROUND(j.avg_jeonsae / m.avg_maemae * 100, 1) as jeonse_rate,
+        m.maemae_count,
+        j.jeonsae_count
     FROM maemae_avg m
     JOIN jeonsae_avg j
         ON m.region = j.region
