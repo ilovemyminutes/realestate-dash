@@ -425,6 +425,115 @@ with tab2:
                     avg_rate = filtered["jeonse_rate"].mean()
                     st.metric("평균 전세가율", f"{avg_rate:.1f}%")
 
+                # 신축/구축 분리 차트
+                st.markdown("---")
+                st.markdown("#### 🏗️ 신축 vs 구축 비교")
+                st.caption("신축: 평균 연식 10년 이하 | 구축: 평균 연식 10년 초과")
+
+                # 신축/구축 분류
+                new_regions = filtered[filtered["avg_building_age"] <= 10]
+                old_regions = filtered[filtered["avg_building_age"] > 10]
+
+                col_new, col_old = st.columns(2)
+
+                with col_new:
+                    st.markdown("##### 🆕 신축 지역")
+                    if not new_regions.empty:
+                        fig_new = px.scatter(
+                            new_regions,
+                            x="total_trades",
+                            y="jeonse_rate",
+                            size="total_households",
+                            color="jeonse_rate",
+                            color_continuous_scale=[
+                                [0, "#4CAF50"],
+                                [0.5, "#FFB74D"],
+                                [1, "#E57373"],
+                            ],
+                            range_color=[40, 80],
+                            hover_name="region",
+                            labels={
+                                "total_trades": "거래량",
+                                "jeonse_rate": "전세가율(%)",
+                            },
+                        )
+                        fig_new.update_layout(
+                            height=300,
+                            showlegend=False,
+                            coloraxis_showscale=False,
+                            title=f"신축 지역 ({len(new_regions)}개)",
+                        )
+                        fig_new.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
+                        st.plotly_chart(fig_new, use_container_width=True)
+
+                        avg_new = new_regions["jeonse_rate"].mean()
+                        avg_trades_new = new_regions["total_trades"].mean()
+                        st.metric(
+                            "평균 전세가율",
+                            f"{avg_new:.1f}%",
+                            f"평균 거래량: {avg_trades_new:.0f}건",
+                        )
+                    else:
+                        st.info("신축 지역 데이터가 없습니다.")
+
+                with col_old:
+                    st.markdown("##### 🏚️ 구축 지역")
+                    if not old_regions.empty:
+                        fig_old = px.scatter(
+                            old_regions,
+                            x="total_trades",
+                            y="jeonse_rate",
+                            size="total_households",
+                            color="jeonse_rate",
+                            color_continuous_scale=[
+                                [0, "#4CAF50"],
+                                [0.5, "#FFB74D"],
+                                [1, "#E57373"],
+                            ],
+                            range_color=[40, 80],
+                            hover_name="region",
+                            labels={
+                                "total_trades": "거래량",
+                                "jeonse_rate": "전세가율(%)",
+                            },
+                        )
+                        fig_old.update_layout(
+                            height=300,
+                            showlegend=False,
+                            coloraxis_showscale=False,
+                            title=f"구축 지역 ({len(old_regions)}개)",
+                        )
+                        fig_old.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=1)
+                        st.plotly_chart(fig_old, use_container_width=True)
+
+                        avg_old = old_regions["jeonse_rate"].mean()
+                        avg_trades_old = old_regions["total_trades"].mean()
+                        st.metric(
+                            "평균 전세가율",
+                            f"{avg_old:.1f}%",
+                            f"평균 거래량: {avg_trades_old:.0f}건",
+                        )
+                    else:
+                        st.info("구축 지역 데이터가 없습니다.")
+
+                # 신축 vs 구축 비교 요약
+                if not new_regions.empty and not old_regions.empty:
+                    diff_rate = new_regions["jeonse_rate"].mean() - old_regions["jeonse_rate"].mean()
+                    diff_trades = new_regions["total_trades"].mean() - old_regions["total_trades"].mean()
+
+                    st.markdown("---")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if diff_rate > 0:
+                            st.info(f"📊 신축이 구축보다 전세가율 **{abs(diff_rate):.1f}%p 높음**")
+                        else:
+                            st.info(f"📊 구축이 신축보다 전세가율 **{abs(diff_rate):.1f}%p 높음**")
+                    with col2:
+                        if diff_trades > 0:
+                            st.info(f"📈 신축이 구축보다 평균 거래량 **{abs(diff_trades):.0f}건 많음**")
+                        else:
+                            st.info(f"📈 구축이 신축보다 평균 거래량 **{abs(diff_trades):.0f}건 많음**")
+
             else:
                 st.warning("필터 조건에 맞는 데이터가 없습니다.")
 
