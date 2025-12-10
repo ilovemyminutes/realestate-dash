@@ -147,8 +147,8 @@ def load_volume_vs_jeonse_rate():
         j.jeonsae_count,
         (m.maemae_count + j.jeonsae_count) as total_trades,
         ROUND(j.avg_jeonsae / NULLIF(m.avg_maemae, 0) * 100, 1) as jeonse_rate,
-        ROUND(m.avg_maemae / 10000, 1) as avg_maemae_억,
-        ROUND(j.avg_jeonsae / 10000, 1) as avg_jeonsae_억,
+        ROUND(m.avg_maemae / 10000, 1) as avg_maemae_eok,
+        ROUND(j.avg_jeonsae / 10000, 1) as avg_jeonsae_eok,
         c.total_households,
         ROUND(c.avg_building_age, 1) as avg_building_age
     FROM maemae_trades m
@@ -347,8 +347,8 @@ with tab2:
                     hover_data={
                         "maemae_count": True,
                         "jeonsae_count": True,
-                        "avg_maemae_억": True,
-                        "avg_jeonsae_억": True,
+                        "avg_maemae_eok": True,
+                        "avg_jeonsae_eok": True,
                         "total_households": True,
                     },
                     labels={
