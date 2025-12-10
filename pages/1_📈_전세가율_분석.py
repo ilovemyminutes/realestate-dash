@@ -5,8 +5,8 @@
 - 깡통전세 위험 경고
 """
 
-import altair as alt
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from utils.bq_client import (
@@ -113,90 +113,101 @@ def load_jeonse_rate_summary_by_region():
 
 # --- 차트 함수 ---
 def create_jeonse_rate_bar_chart(df: pd.DataFrame):
-    """동별 전세가율 바 차트 (Altair) - 단순화 버전"""
+    """동별 전세가율 바 차트 (Plotly)"""
 
-    # 데이터 정렬 (전세가율 내림차순 - 높은 게 위로)
+    # 데이터 정렬 (전세가율 오름차순 - 낮은 게 아래로)
     sorted_df = df.sort_values("jeonse_rate", ascending=True).copy()
 
-    # 바 차트
-    chart = (
-        alt.Chart(sorted_df)
-        .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
-        .encode(
-            x=alt.X("jeonse_rate:Q", title="전세가율 (%)", scale=alt.Scale(domain=[0, 100])),
-            y=alt.Y("region:N", title="지역(동)", sort=list(sorted_df["region"])),
-            color=alt.Color(
-                "jeonse_rate:Q",
-                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[20, 80]),
-                legend=alt.Legend(title="전세가율(%)", orient="right"),
-            ),
-            tooltip=[
-                alt.Tooltip("region:N", title="지역"),
-                alt.Tooltip("jeonse_rate:Q", title="전세가율(%)", format=".1f"),
-                alt.Tooltip("avg_maemae:Q", title="평균매매가(만원)", format=",.0f"),
-                alt.Tooltip("avg_jeonsae:Q", title="평균전세가(만원)", format=",.0f"),
-                alt.Tooltip("gap:Q", title="갭(만원)", format=",.0f"),
-            ],
-        )
-        .properties(
-            title=alt.TitleParams(
-                text="동별 전세가율 현황 (6개월 평균)",
-                subtitle="낮을수록 안전 (녹색) | 높을수록 위험 (빨간색)",
-                fontSize=16,
-                anchor="start",
-            ),
-            height=max(400, len(sorted_df) * 28),
-        )
-        .interactive()
+    # Plotly 바 차트
+    fig = px.bar(
+        sorted_df,
+        x="jeonse_rate",
+        y="region",
+        orientation="h",
+        color="jeonse_rate",
+        color_continuous_scale="RdYlGn_r",
+        range_color=[20, 80],
+        labels={"jeonse_rate": "전세가율(%)", "region": "지역(동)"},
+        hover_data={
+            "avg_maemae": ":,.0f",
+            "avg_jeonsae": ":,.0f",
+            "gap": ":,.0f",
+        },
     )
 
-    return chart
+    # 레이아웃 개선
+    fig.update_layout(
+        title={
+            "text": "동별 전세가율 현황 (6개월 평균)<br><sub>낮을수록 안전 (녹색) | 높을수록 위험 (빨간색)</sub>",
+            "x": 0,
+            "xanchor": "left",
+        },
+        height=max(500, len(sorted_df) * 25),
+        xaxis_title="전세가율 (%)",
+        yaxis_title="",
+        coloraxis_colorbar_title="전세가율(%)",
+        showlegend=False,
+        xaxis={"range": [0, 100]},
+    )
+
+    # 위험선 추가
+    fig.add_vline(
+        x=70, line_dash="dash", line_color="#FF6B6B", line_width=2, annotation_text="⚠️ 70%", annotation_position="top"
+    )
+    fig.add_vline(
+        x=80, line_dash="dash", line_color="#DC143C", line_width=2, annotation_text="🚨 80%", annotation_position="top"
+    )
+
+    return fig
 
 
 def create_apartment_scatter_chart(df: pd.DataFrame):
-    """아파트별 전세가율 산점도 차트"""
+    """아파트별 전세가율 산점도 차트 (Plotly)"""
 
     df_copy = df.copy()
     df_copy["gap_억"] = df_copy["gap"] / 10000
     df_copy["avg_maemae_억"] = df_copy["avg_maemae"] / 10000
 
-    chart = (
-        alt.Chart(df_copy)
-        .mark_circle(opacity=0.7)
-        .encode(
-            x=alt.X("avg_maemae_억:Q", title="평균 매매가 (억원)", scale=alt.Scale(zero=False)),
-            y=alt.Y("jeonse_rate:Q", title="전세가율 (%)", scale=alt.Scale(domain=[30, 100])),
-            size=alt.Size("gap_억:Q", title="갭(억)", scale=alt.Scale(range=[50, 500])),
-            color=alt.Color(
-                "jeonse_rate:Q",
-                scale=alt.Scale(scheme="redyellowgreen", reverse=True, domain=[40, 90]),
-                legend=None,
-            ),
-            tooltip=[
-                alt.Tooltip("apartment_name:N", title="아파트"),
-                alt.Tooltip("region:N", title="지역"),
-                alt.Tooltip("area_type:N", title="평형"),
-                alt.Tooltip("jeonse_rate:Q", title="전세가율(%)", format=".1f"),
-                alt.Tooltip("avg_maemae_억:Q", title="매매가(억)", format=".2f"),
-                alt.Tooltip("gap_억:Q", title="갭(억)", format=".2f"),
-            ],
-        )
-        .properties(
-            title=alt.TitleParams(
-                text="아파트별 전세가율 분포",
-                subtitle="원 크기: 갭(억) | 색상: 전세가율",
-                fontSize=16,
-            ),
-            height=400,
-        )
-        .interactive()
+    fig = px.scatter(
+        df_copy,
+        x="avg_maemae_억",
+        y="jeonse_rate",
+        size="gap_억",
+        color="jeonse_rate",
+        color_continuous_scale="RdYlGn_r",
+        range_color=[40, 90],
+        hover_name="apartment_name",
+        hover_data={
+            "region": True,
+            "area_type": True,
+            "jeonse_rate": ":.1f",
+            "avg_maemae_억": ":.2f",
+            "gap_억": ":.2f",
+        },
+        labels={
+            "avg_maemae_억": "평균 매매가 (억원)",
+            "jeonse_rate": "전세가율 (%)",
+            "gap_억": "갭(억)",
+            "region": "지역",
+            "area_type": "평형",
+        },
+    )
+
+    fig.update_layout(
+        title={
+            "text": "아파트별 전세가율 분포<br><sub>원 크기: 갭(억) | 색상: 전세가율</sub>",
+            "x": 0,
+            "xanchor": "left",
+        },
+        height=450,
+        coloraxis_colorbar_title="전세가율(%)",
     )
 
     # 위험선 추가
-    rule_70 = alt.Chart(pd.DataFrame({"y": [70]})).mark_rule(strokeDash=[5, 5], color="#FF6B6B").encode(y="y:Q")
-    rule_80 = alt.Chart(pd.DataFrame({"y": [80]})).mark_rule(strokeDash=[5, 5], color="#DC143C").encode(y="y:Q")
+    fig.add_hline(y=70, line_dash="dash", line_color="#FF6B6B", line_width=2, annotation_text="⚠️ 70%")
+    fig.add_hline(y=80, line_dash="dash", line_color="#DC143C", line_width=2, annotation_text="🚨 80%")
 
-    return chart + rule_70 + rule_80
+    return fig
 
 
 # --- UI ---
@@ -224,9 +235,9 @@ with tab1:
 
             st.markdown("---")
 
-            # Altair 차트
-            chart = create_jeonse_rate_bar_chart(region_df)
-            st.altair_chart(chart, use_container_width=True)
+            # Plotly 차트
+            fig = create_jeonse_rate_bar_chart(region_df)
+            st.plotly_chart(fig, use_container_width=True)
 
             # 상세 테이블
             with st.expander("📋 상세 데이터 보기"):
@@ -277,8 +288,8 @@ with tab2:
 
             # 산점도 차트
             if not filtered_df.empty:
-                scatter_chart = create_apartment_scatter_chart(filtered_df)
-                st.altair_chart(scatter_chart, use_container_width=True)
+                scatter_fig = create_apartment_scatter_chart(filtered_df)
+                st.plotly_chart(scatter_fig, use_container_width=True)
 
             # 위험군 분류
             col1, col2 = st.columns(2)
